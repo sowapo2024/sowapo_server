@@ -16,6 +16,8 @@ const sermonsRouter = require("./routes/sermon")
 const booksRouter = require("./routes/books")
 const adminRouter = require("./routes/admin")
 const donationRouter = require("./routes/donation")
+const webhookRouter = require("./routes/webhook")
+
 
 
 // importing paystack webhook
@@ -83,10 +85,12 @@ app.use("/api/sermons",sermonsRouter)
 app.use("/api/books",booksRouter)
 app.use("/api/admin",adminRouter)
 app.use("/api/donations",donationRouter)
+app.use("/api/webhook",webhookRouter)
+
 
 // set up webhook endpoint for paystack
 
-app.post("/api/webhook/paystack",)
+app.post("/api/webhook/paystack",webhook)
 
 
 // if the request passes all the middleware without a response
