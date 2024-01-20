@@ -34,6 +34,6 @@ const post = new mongoose.Schema({
     }
 },{timestamps:true})
 
-const Post =  new mongoose.model("Post",post)
+const Post =  mongoose.model("Post",post)
 
 module.exports = Post
