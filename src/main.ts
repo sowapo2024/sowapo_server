@@ -86,7 +86,7 @@ app.use("/api/donations",donationRouter)
 
 // set up webhook endpoint for paystack
 
-app.post("/webhook/paystack",)
+app.post("/api/webhook/paystack",)
 
 
 // if the request passes all the middleware without a response
