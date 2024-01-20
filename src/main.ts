@@ -17,6 +17,10 @@ const booksRouter = require("./routes/books")
 const adminRouter = require("./routes/admin")
 const donationRouter = require("./routes/donation")
 
+
+// importing paystack webhook
+const {webhook} = require("./external-apis/paystack")
+
 const app = express();
 
 // for body-parser middleware
@@ -79,6 +83,10 @@ app.use("/api/sermons",sermonsRouter)
 app.use("/api/books",booksRouter)
 app.use("/api/admin",adminRouter)
 app.use("/api/donations",donationRouter)
+
+// set up webhook endpoint for paystack
+
+app.post("/webhook/paystack",)
 
 
 // if the request passes all the middleware without a response
