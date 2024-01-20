@@ -24,7 +24,7 @@ const transaction = new mongoose.Schema({
     },
     book:{
         type:mongoose.Types.ObjectId,
-        ref:'Books'
+        ref:'Book'
     },
     email:{
         type:String,
