@@ -77,7 +77,7 @@ const webhook = async (req, res) => {
         // send receipts based on the transaction type
         if (transaction.type === 'book_purchase') {
           await transaction.populate('book');
-          sendBookReciept({
+          await sendBookReciept({
             email: transaction.email,
             amount: transaction.amount,
             attachments: [{ path: transaction.book.book_link }],
@@ -86,7 +86,7 @@ const webhook = async (req, res) => {
           transaction.type === 'offering' ||
           transaction.type === 'tithe'
         ) {
-          sendDonationReciept({
+          await sendDonationReciept({
             email: transaction.email,
             amount: transaction.amount,
           });

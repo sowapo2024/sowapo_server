@@ -52,7 +52,7 @@ const sendVerification = async ({
   username: string;
   token: string;
 }) => {
-  const html_body: string = convertHTML(
+  const html_body: string = await convertHTML(
     './src/utils/mail_templates/sendVerification.html',
     'utf-8',
     { username: username, token: token },
@@ -67,12 +67,19 @@ const sendDonationReciept = async ({
   email: string;
   amount: string;
 }) => {
-  const html_body: string = convertHTML(
+
+  try {
+      const html_body: string = convertHTML(
     './src/utils/mail_templates/sendVerification.html',
     'utf-8',
     { amount },
   );
   await sender({ html: html_body, to: email, subject: 'Donation Recieved' });
+  } catch (error) {
+    console.log("mailing error :",error)
+    throw new Error("error occured while sending mail")
+  }
+
 };
 
 const sendBookReciept = async ({
@@ -84,7 +91,8 @@ const sendBookReciept = async ({
   amount: string;
   attachments: {}[];
 }) => {
-  const html_body: string = convertHTML(
+  try {
+      const html_body: string = await convertHTML(
     './src/utils/mail_templates/sendVerification.html',
     'utf-8',
     { amount },
@@ -95,6 +103,12 @@ const sendBookReciept = async ({
     subject: 'Transaction successful',
     attachments: attachments,
   });
+  } catch (error) {
+
+    console.log("mailing error :",error)
+    throw new Error("error occured while sending mail")
+  }
+
 };
 
 module.exports = {
