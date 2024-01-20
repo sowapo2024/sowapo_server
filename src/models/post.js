@@ -1,38 +1,39 @@
 
 const mongoose = require("mongoose")
 
-const sermon = new mongoose.Schema({
+const post = new mongoose.Schema({
     title:{
         type: String,
-        required:[true,"sermon must have a title"]
+        required:[true,"Post must have a title"]
     },
     author:{
         type:mongoose.Schema.Types.ObjectId,
-        // required:[true,"sermon must have an author"],
+        // required:[true,"Post must have an author"],
         ref: "Admin"
     },
     description:{
         type: String,
-        required:[true,"sermon must have a descrption"]
+        required:[true,"Post must have a descrption"]
     },
     mediaUrls:[{
         link:String,
         _id:mongoose.Schema.Types.ObjectId,
         type:{
             type:String,
-            enum:["video","audio","image"]
-        }
+            enum:["video","audio","image","application"]
+        },
+        file_extension: String
     }],
     audience:{
       type:String,
       enum:["agape","amplified","children","all"],
-      required:[true,"sermon must have an audience"]
+      required:[true,"Post must have an audience"]
     },
     tag:{
         type:String,
     }
 },{timestamps:true})
 
-const Sermon =  mongoose.model("Sermon",sermon)
+const Post =  mongoose.model("Post",post)
 
-module.exports = Sermon
+module.exports = Post

@@ -36,7 +36,7 @@ router.post("/update_profile",auth, users_controller.editUser);
 // @route   POST api/users/create_avatar
 // @desc    Post user image
 // @access  private
-router.post("/upload_avatar",auth,singleMulterImageHandler, users_controller.createAvatar);
+router.post("/upload_avatar",auth,singleImage, users_controller.createAvatar);
 
 
 

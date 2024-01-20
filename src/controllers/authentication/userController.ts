@@ -55,17 +55,7 @@ exports.createUser = async (req, res) => {
               firstName: firstName,
               lastName: lastName,
             });
-            console.log(user, 'user');
             user.save(user);
-            // const id = user?._id;
-            // const username = user.userName;
-            // console.log("saved");
-            // const token = jwt.sign({ id, username }, process.env.JWT_SECRET, {
-            //   expiresIn: "30m",
-            // });
-            // console.log("token ");
-
-            // sendVerificationEmail(email, token);
             return res
               .status(201)
               .json({ message: 'user registered sucessfully', id: user._id });
@@ -267,7 +257,7 @@ exports.editUser = async (req, res) => {
       {
         new: true,
         useFindAndModify: false,
-      }
+      },
     ).select('-password');
 
     res.status(200).json({
@@ -279,7 +269,6 @@ exports.editUser = async (req, res) => {
     res.status(500).json({ message: "Couldn't update user", error });
   }
 };
-
 
 //upload avatar
 exports.createAvatar = async (req, res) => {
@@ -298,15 +287,15 @@ exports.createAvatar = async (req, res) => {
       );
       res
         .status(201)
-        .json({ msg: 'avatar created successfully', path: req.file.path });
+        .json({ message: 'avatar created successfully', path: req.file.path });
     } catch (error) {
       console.log(error);
       res
         .status(400)
-        .json({ msg: 'avatar creation is not successful', error: error });
+        .json({ message: 'avatar creation is not successful', error: error });
     }
   } else {
-    res.status(400).json({ msg: 'error' });
+    res.status(400).json({ message: 'error' });
   }
 };
 
@@ -403,11 +392,11 @@ exports.forgotPasswordLink = async (req, res) => {
       const user = await User.findOne({ email: email });
 
       if (user) {
-        const token = jwt.sign({ email,id:user.id }, jwtSecret, {
+        const token = jwt.sign({ email, id: user.id }, jwtSecret, {
           expiresIn: '30m',
         });
         // sendResetPasswordEmail(email, token);
-        res.status(200).json({ message: 'link sent sucessfully'});
+        res.status(200).json({ message: 'link sent sucessfully' });
       } else {
         res.status(400).json({ message: 'user not found' });
       }
@@ -486,13 +475,13 @@ exports.resetPassword = async (req, res) => {
       } else {
         res.status(400).json({ message: 'user not found' });
       }
+    } else {
+      return res
+        .status(400)
+        .json({ message: 'fill in the necessary credentials' });
     }
-    else{
-      return res.status(400).json({ message: 'fill in the necessary credentials' });
-    }
-
   } catch (error) {
-    console.log(error)
+    console.log(error);
     res
       .status(500)
       .json({ message: 'error: could not change password', error });

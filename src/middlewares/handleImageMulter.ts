@@ -40,6 +40,129 @@ exports.multipleImages = function (req, res, next) {
   });
 };
 
+
+// middleware to accept images, videos and audio 
+exports.allMedia = (req,res,next)=>{
+  var mediaStorage = new CloudinaryStorage({
+    cloudinary: cloudinary,
+    params: {
+      folder: "Posts",
+      allowed_formats: ["jpg", "png", "jpeg", "gif", "mp4", "mp3", "avi", "wav", "ogg", "mpa"],
+ // supports promises as well
+    },
+  });
+  const upload = multer({
+    storage:mediaStorage,
+    limits: {
+      fileSize: 1024 * 1024 * 100, // 100MB file size limit
+    }, 
+  })
+
+  upload.array("media")(req,res,(error)=>{
+    if (error) {
+      console.error("Media upload failed:", error);
+
+      let errorMessage = "Media upload failed";
+      let errorCode = "UPLOAD_ERROR";
+
+      if (error.code === "LIMIT_FILE_SIZE") {
+        errorMessage = "File size exceeds the limit (100MB)";
+        errorCode = "FILE_SIZE_LIMIT_EXCEEDED";
+      } else if (error.message === "Invalid file format") {
+        errorMessage = "Invalid file format";
+        errorCode = "INVALID_FILE_FORMAT";
+      }
+
+      return res.status(400).json({
+        error: errorMessage,
+        errorCode,
+        errorStack:error
+      });
+    }
+
+    next()
+  })
+}
+
+
+// middleware to accept all media types
+exports.allMediaTypes = async (req,res,next)=>{
+
+  function runMiddleware(req, res, fn) {
+    return new Promise((resolve, reject) => {
+      fn(req, res, (result) => {
+        if (result instanceof Error) {
+          return reject(result);
+        }
+        return resolve(result);
+      });
+    });
+  }
+  
+  try {
+    
+    const upload = multer({
+      storage:multer.memoryStorage(),
+      limits: {
+        fileSize: 1024 * 1024 * 100, // 100MB file size limit
+      }, 
+    })
+  
+    const myUploadMiddleware =  upload.array("media")
+  
+     // Run the multer middleware for multiple files
+     await runMiddleware(req, res, myUploadMiddleware);
+  
+     // Convert each file to a data URI
+     const filesDataURI = req?.files?.map((file) => {
+       const b64 = Buffer.from(file.buffer).toString("base64");
+       return "data:" + file.mimetype + ";base64," + b64;
+     });
+  
+     // Upload all files to Cloudinary
+     const uploadResults = await Promise.all(
+       filesDataURI.map((dataURI) =>
+         cloudinary.uploader.upload(dataURI, {
+           resource_type: "auto",
+         })
+       )
+     );
+
+         // Add file paths to the request for later use
+    // Add file paths to the request for later use
+    req.filePaths = req.files.map((file,i) => ({
+      path: uploadResults[i].secure_url,
+      filename: file.filename,
+      mimetype: file.mimetype
+    }));
+    next()
+  } catch (error) {
+    if (error) {
+      console.error("Media upload failed:", error);
+
+      let errorMessage = "Media upload failed";
+      let errorCode = "UPLOAD_ERROR";
+
+      if (error.code === "LIMIT_FILE_SIZE") {
+        errorMessage = "File size exceeds the limit (100MB)";
+        errorCode = "FILE_SIZE_LIMIT_EXCEEDED";
+      } else if (error.message === "Invalid file format") {
+        errorMessage = "Invalid file format";
+        errorCode = "INVALID_FILE_FORMAT";
+      }
+
+      return res.status(400).json({
+        error: errorMessage,
+        errorCode,
+        errorStack:error
+      });
+    }
+  }
+
+}
+
+
+
 exports.singleImage = function (req, res, next) {
     // Create a Multer upload object
     const upload = multer({

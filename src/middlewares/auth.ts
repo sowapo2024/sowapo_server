@@ -30,6 +30,7 @@ const auth = (req, res, next) => {
         });
       }
       if (error instanceof jwt.JsonWebTokenError ) {
+        console.log(error)
         return res.status(401).json({
           message: "Invalid Token",
           error: error.message,

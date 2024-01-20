@@ -1,18 +1,15 @@
-
-
-
 const mongoose = require("mongoose")
-const Schema = mongoose.Schema()
 
-const anouncement = new Schema({
+const anouncement = new mongoose.Schema({
     title:{
         type:String,
         required:[true,"announcement must have a title"]
 
     },
     author:{
-        type:String,
-        required:[true,"announcement must have a title"]
+        type:mongoose.Schema.Types.ObjectId,
+        // required:[true,"announcement must have an author"],
+        ref: "Admin"
     },
     date:{
         type: Date,
@@ -21,18 +18,18 @@ const anouncement = new Schema({
     callToAction:{
         type:String,
     },
-    link:String,
+    external_link:String,
     body:{
         type:String,
         required:[true,"announcement must have a body"]
     },
-    banner:[{
+    banner:{
         type:String,
-    }],
+    },
 
-},{timeStamp:true})
+},{timestamps:true})
 
 
-const Anouncements = new mongoose.Model("Anouncement",anouncement)
+const Anouncements = new mongoose.model("Anouncement",anouncement)
 
 module.exports = Anouncements

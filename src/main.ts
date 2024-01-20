@@ -7,9 +7,15 @@ const cors = require("cors");
 require("dotenv").config();
 const bodyParser = require("body-parser");
 
-
 // initializing routes 
 const usersRouter = require("./routes/users");
+const postRouter = require("./routes/posts")
+const testimonyRouter = require("./routes/testimony")
+const announcementRouter = require("./routes/announcement")
+const sermonsRouter = require("./routes/sermon")
+const booksRouter = require("./routes/books")
+const adminRouter = require("./routes/admin")
+const donationRouter = require("./routes/donation")
 
 const app = express();
 
@@ -49,12 +55,6 @@ if (process.env.NODE_ENV !== "production") {
 }
 
 if (process.env.NODE_ENV == "production") {
-  // // set static folder
-  // app.use(express.static(path.join(__dirname, "views", "build")));
-
-  // app.get("*", (req, res) => {
-  //   res.sendFile(path.join(__dirname, "views", "build", "index.html"));
-  // });
   dbURI = process.env.DB_URI;
 }
 
@@ -72,6 +72,14 @@ db.once("open", function (con) {
 
 // Set up our main routes
 app.use("/api/users", usersRouter);
+app.use("/api/posts",postRouter);
+app.use("/api/testimonies",testimonyRouter);
+app.use("/api/announcements",announcementRouter)
+app.use("/api/sermons",sermonsRouter)
+app.use("/api/books",booksRouter)
+app.use("/api/admin",adminRouter)
+app.use("/api/donations",donationRouter)
+
 
 // if the request passes all the middleware without a response
 app.use((req, res, next) => {
@@ -93,3 +101,6 @@ const PORT:string|number = process.env.PORT || 4000;
 app.listen(PORT,()=>{
     console.log(`Server is running on port ${PORT} at `+ new Date().toTimeString())
 })
+
+
+
