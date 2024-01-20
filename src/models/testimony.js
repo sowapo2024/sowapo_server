@@ -32,6 +32,6 @@ const testimony = new mongoose.Schema({
 },{timestamps:true})
 
 
-const Testimony =  mongoose.model("Testimony",testimony);
+const Testimony =  new mongoose.model("Testimony",testimony);
 
 module.exports = Testimony
