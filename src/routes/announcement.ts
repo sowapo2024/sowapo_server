@@ -5,7 +5,7 @@ const {singleImage} = require('../middlewares/handleImageMulter') //import the c
 const announcementControllers = require('../controllers/announcement/announcement'); 
 
 // Create Announcement
-router.post('/create',singleImage, announcementControllers.createAnnouncement);
+router.post('/create',adminAuth,singleImage, announcementControllers.createAnnouncement);
 
 // Read All Announcements
 router.get('/get', announcementControllers.getAllAnnouncements);
@@ -14,9 +14,9 @@ router.get('/get', announcementControllers.getAllAnnouncements);
 router.get('/get/:id', announcementControllers.getAnnouncementById);
 
 // Update Announcement
-router.put('/update/:id',singleImage, announcementControllers.updateAnnouncement);
+router.put('/update/:id',adminAuth,singleImage, announcementControllers.updateAnnouncement);
 
 // Delete Announcement
-router.delete('/delete/:id', announcementControllers.deleteAnnouncement);
+router.delete('/delete/:id',adminAuth, announcementControllers.deleteAnnouncement);
 
 module.exports = router;

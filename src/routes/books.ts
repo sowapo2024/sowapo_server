@@ -5,7 +5,7 @@ const {allMediaTypes} = require('../middlewares/handleImageMulter')
 
 
 //create book
-router.post('/create',allMediaTypes,books_controller.createBook)
+router.post('/create',adminAuth,allMediaTypes,books_controller.createBook)
 
 // get all books
 router.get("/get",books_controller.getAllBooks)
@@ -14,7 +14,7 @@ router.get("/get",books_controller.getAllBooks)
 router.get("/get/:id",books_controller.getBookById)
 
 //update book by id
-router.put("/update/:id",books_controller.updateBook)
+router.put("/update/:id",adminAuth,books_controller.updateBook)
 
 //delete book by id
 router.delete ("/delete/:id",adminAuth,books_controller.deleteBook)

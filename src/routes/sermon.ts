@@ -11,7 +11,7 @@ const { allMediaTypes} = require("../middlewares/handleImageMulter");
 // @route   sermon api/sermons/create
 // @desc    send user data for registeration
 // @access  public
-router.post("/create",allMediaTypes,sermon_controller.createSermon );
+router.post("/create",adminAuth,allMediaTypes,sermon_controller.createSermon );
 
 // @route   sermon api/sermon/login
 // @desc    send user data for logging in
@@ -27,19 +27,19 @@ router.get("/get/:sermonId",sermon_controller.getSermonById);
 // @route   sermon api/sermons/update_sermon
 // @desc    sermon user data
 // @access  private
-router.put("/update/:sermonId",allMediaTypes, sermon_controller.updateSermonById );
+router.put("/update/:sermonId",adminAuth,allMediaTypes, sermon_controller.updateSermonById );
 
 // @route   sermon api/sermon/create_avatar
 // @desc    sermon user image
 // @access  private
-router.delete("/delete/:sermonId",sermon_controller.deleteSermonById);
+router.delete("/delete/:sermonId",adminAuth,sermon_controller.deleteSermonById);
 
 
 
 // @route   PUT api/sermon/upload_images
 // @desc    PUT delete images
 // @access  private
-router.delete("/delete_media/:sermonId/:mediaId", sermon_controller.deleteImageFromSermon);
+router.delete("/delete_media/:sermonId/:mediaId",adminAuth, sermon_controller.deleteImageFromSermon);
 
 router.get("/filter",auth,sermon_controller.filterSermons)
 
