@@ -20,7 +20,7 @@ router.put('/update/:id', auth, subscriptionAuth, devotionalController.updateDev
 router.get('/', auth, subscriptionAuth, devotionalController.getAllDevotionals);
 
 // Route to get daily devotional by date
-router.get('/:date', devotionalController.getDailyDevotional);
+router.get('/daily', devotionalController.getDailyDevotional);
 
 // Route to delete a devotional
 router.delete('/:id', adminAuth, devotionalController.deleteDevotional);

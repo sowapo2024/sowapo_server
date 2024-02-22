@@ -98,7 +98,7 @@ exports.getDailyDevotional = async (req, res) => {
         new Date().toDateString()
       );
     });
-    res.status(200).json({ devotion: dailyDevotion });
+    res.status(200).json({message:"devotion fetched successfully", devotion: dailyDevotion });
   } catch (error) {
     res.status(500).json({ message: error.message || 'something went wrong' });
   }
