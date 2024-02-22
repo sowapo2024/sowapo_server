@@ -1,6 +1,7 @@
 const Book = require('../../models/book'); // Replace 'yourBookModel' with the actual file path of your model
 const { initiatePayments } = require('../../external-apis/paystack');
 const Transaction = require('../../models/transaction');
+const mongoose = require("mongoose")
 
 // Create Book
 exports.createBook = async (req, res) => {
@@ -140,11 +141,12 @@ exports.buyBook = async (req, res) => {
         currency,
         book: bookId,
         type: 'book_purchase',
+        user: mongoose.Types.Schema.ObjectId(req?.user?.id)
       });
 
       return res
         .status(200)
-        .json({ data: { checkout_url }, message: 'purchase' });
+        .json({ data: { checkout_url }, message: 'book purchase complete' });
     } else {
       return res.status(404).json({ message: 'book not found' });
     }

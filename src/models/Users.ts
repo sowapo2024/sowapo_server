@@ -12,6 +12,10 @@ const UserSchema = new Schema({
   gender: { type: String },
   nationality: { type: String },
   avatar:{type:String},
+  subscription:{
+    type: mongoose.Types.ObjectId,
+    ref:"Subscription"
+  },
   birthDate: { type: String },
   isSuspended: { type: Boolean,default:false },
 //   profileCreated:{type:Boolean,default:false},

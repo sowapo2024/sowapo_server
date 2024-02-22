@@ -44,9 +44,9 @@ router.delete("/delete_post/:postId",adminAuth,post_controller.deletePostById);
 // @route   PUT api/users/upload_images
 // @desc    PUT delete images
 // @access  private
-router.delete("/delete_media/:postId/:mediaId",auth, post_controller.deleteImageFromPost);
+router.delete("/delete_media/:postId/:mediaId",adminAuth, post_controller.deleteImageFromPost);
 
-router.get("/filter",auth,post_controller.filterPosts)
+router.get("/filter",post_controller.filterPosts)
 
 
 module.exports = router;

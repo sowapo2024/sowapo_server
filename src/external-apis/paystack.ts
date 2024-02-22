@@ -4,6 +4,8 @@ const {
   sendBookReciept,
   sendDonationReciept,
 } = require('../utils/mailer');
+const Subscription = require("../models/subscription")
+const User = require("../models/Users")
 
 
 
@@ -90,6 +92,16 @@ const webhook = async (req, res) => {
             email: transaction.email,
             amount: transaction.amount,
           });
+        }
+        else if (transaction.type === "devotional_subscription" ) {
+          const subscription = await Subscription.create({
+            startDate : Date.now(),
+            endDate: Date.now()+ 365*24*60*60*100,
+            user: req.user.id,
+            transaction:transaction._id
+           })
+           await User.findByIdAndUpdate(transaction.user,{subscription:subscription._id})
+
         }
         return res
           .status(200)

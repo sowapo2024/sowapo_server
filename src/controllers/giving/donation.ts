@@ -1,5 +1,6 @@
 const Transaction = require('../../models/transaction');
 const { initiatePayments } = require('../../external-apis/paystack');
+const mongoose = require("mongoose")
 
 interface donationBody {
   amount: string;
@@ -31,7 +32,10 @@ exports.makeDonation = async (req, res) => {
         email,
         currency,
         type: type,
+        user: mongoose.Types.Schema.ObjectId(req?.user?.id)
       });
+
+      transaction.save()
 
       return res
         .status(200)

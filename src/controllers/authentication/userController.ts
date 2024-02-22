@@ -395,7 +395,7 @@ exports.forgotPasswordLink = async (req, res) => {
         const token = jwt.sign({ email, id: user.id }, jwtSecret, {
           expiresIn: '30m',
         });
-        // sendResetPasswordEmail(email, token);
+        sendResetPasswordEmail(email, token);
         res.status(200).json({ message: 'link sent sucessfully' });
       } else {
         res.status(400).json({ message: 'user not found' });

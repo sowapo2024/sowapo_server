@@ -199,6 +199,22 @@ const restrictAdmin = async (req, res) => {
   }
 };
 
+const deleteAdminAccount = async (req, res) => {
+  const { adminId } = req.params;
+
+  try {
+    await Admin.findOneAndDelete({ _id: adminId });
+    return res.status(201).json({
+      message: "admin account deleted",
+    });
+  } catch (error) {
+    return res.status(500).json({
+      message: "something went wrong: account could not be deleted",
+      error,
+    });
+  }
+};
+
 const banAccount = async (req, res) => {
   const { userId } = req.params;
 
@@ -257,4 +273,5 @@ module.exports = {
   adminSignup,
   generateAllUsersGraphData,
   verifyToken,
+  deleteAdminAccount,
 };

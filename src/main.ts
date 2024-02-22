@@ -17,6 +17,12 @@ const booksRouter = require("./routes/books")
 const adminRouter = require("./routes/admin")
 const donationRouter = require("./routes/donation")
 const webhookRouter = require("./routes/webhook")
+const devotionalRoute = require("./routes/devotional")
+const transactionRoute = require("./routes/transaction")
+const streamsRoute = require("./routes/streams")
+
+
+
 
 
 
@@ -86,6 +92,12 @@ app.use("/api/books",booksRouter)
 app.use("/api/admin",adminRouter)
 app.use("/api/donations",donationRouter)
 app.use("/api/webhook",webhookRouter)
+app.use("/api/devotionals",devotionalRoute)
+app.use("/api/transactions",transactionRoute)
+app.use("/api/streams",streamsRoute)
+
+
+
 
 
 // set up webhook endpoint for paystack

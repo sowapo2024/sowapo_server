@@ -37,11 +37,11 @@ const transaction = new mongoose.Schema({
     },
     type:{
         type:String,
-        enum:["offering","tithe","book_purchase"],
+        enum:["offering","tithe","devotional_subscription"],
         required:[true,"transaction must have a type"],
     }
 },{timestamps:true})
 
-const Transactions =  mongoose.model("Transactions",transaction)
+const Transactions =  mongoose.model("Transaction",transaction)
 
 module.exports = Transactions
