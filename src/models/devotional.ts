@@ -15,7 +15,7 @@ const devotionalSchema = new mongoose.Schema(
       required: true,
     },
     date: {
-      type: Date,
+      type: String,
       required: true,
       unique:true,
     },
@@ -31,7 +31,6 @@ const devotionalSchema = new mongoose.Schema(
     },
     media_url: {
       type: String,
-      required: true,
     },
     views: [
       {

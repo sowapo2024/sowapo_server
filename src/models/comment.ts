@@ -15,6 +15,10 @@ const comment = new mongoose.Schema({
     reply_to:{
         type: String,
         enum:["devotional","post"]
+    },
+    devotional:{
+        type: mongoose.Schema.Types.ObjectId,
+        ref:'Devotional'
     }
 },{timestamps:true})
 
