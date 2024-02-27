@@ -54,11 +54,6 @@ router.put("/delete_images/:imageId",auth, users_controller.deleteUserImage);
 // @access  public
 router.get("/get_user",auth,users_controller.getUser);
 
-// users_validation.validateLogin,
-// @route   GET api/users/user
-// @desc    Get user data
-// @access  public
-router.get("/get_users",auth,users_controller.getUsers);
 
 
 // @route   PUT api/users/edit_account
