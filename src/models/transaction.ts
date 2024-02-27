@@ -8,15 +8,15 @@ const transaction = new mongoose.Schema({
     },
     access_code:{
         type:String,
-        required:[true,"transaction must have a amount"],
+        required:[true,"transaction must have an access code"],
     },
     amount:{
         type:String,
-        required:[true,"transaction must have a amount"],
+        required:[true,"transaction must have an amount"],
     },
     currency:{
         type:String,
-        required:[true,"transaction must have a amount"],
+        required:[true,"transaction must have a currency"],
     },
     user:{
         type:mongoose.Types.ObjectId,
