@@ -10,6 +10,8 @@ const {
     generateAllUsersGraphData,
     verifyToken,
   } = require("../controllers/admin/adminController")
+const users_controller = require("../controllers/authentication/userController");
+
 
   const {adminAuth} = require("../middlewares/auth")
 
@@ -21,6 +23,19 @@ router.post("/register",adminSignup);
 // admin signIn
 router.post("/login",adminSignIn);
 
+// get all users
+
+// users_validation.validateLogin,
+// @route   GET api/users/user
+// @desc    Get user data
+// @access  public
+router.get("/get_users",adminAuth,users_controller.getUsers);
+
+// users_validation.validateLogin,
+// @route   GET api/users/user
+// @desc    Get user data
+// @access  public
+router.get("/get_user",adminAuth,users_controller.getUser);
 //generate graph data
 router.get("/generate_graph/:year",adminAuth,generateAllUsersGraphData);
 
