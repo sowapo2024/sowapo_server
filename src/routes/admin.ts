@@ -4,6 +4,7 @@ const {
     restrictUser,
     activateAccount,
     banAccount,
+    getUser,
     deleteAccount,
     adminSignIn,
     adminSignup,
@@ -35,7 +36,11 @@ router.get("/get_users",adminAuth,users_controller.getUsers);
 // @route   GET api/users/user
 // @desc    Get user data
 // @access  public
-router.get("/get_user",adminAuth,users_controller.getUser);
+router.get("/verify_token",adminAuth,verifyToken);
+
+// verify token
+router.get("/get_user/:userId",adminAuth,getUser);
+
 //generate graph data
 router.get("/generate_graph/:year",adminAuth,generateAllUsersGraphData);
 

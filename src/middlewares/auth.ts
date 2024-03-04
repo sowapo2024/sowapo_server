@@ -19,7 +19,7 @@ const auth = (req, res, next) => {
       req.user = decoded;
   
       // restrict all permissions from the restricted users
-      if (req.user.isRestricted) {
+      if (req.user.isSuspended) {
         res.status(401).json({ message: "Your account is banned, contact us" });
       } else next();
     } catch (error) {
@@ -49,7 +49,7 @@ const auth = (req, res, next) => {
 const adminAuth = (req, res, next) => {
     const token = req.header("x-auth-token");
   
-    console.log(token)
+    console.log(token,"token")
   
     // check for token
     if (!token)

@@ -199,6 +199,15 @@ const restrictAdmin = async (req, res) => {
   }
 };
 
+const getUser = (req, res) => {
+  Users.findById(req.params.userId)
+    .select('-password')
+    .then((user) => res.status(200).json({ user: user, message: 'user found' }))
+    .catch((err) => {
+      res.status(500).json({ error: err, message: 'user not found' });
+    });
+};
+
 const deleteAdminAccount = async (req, res) => {
   const { adminId } = req.params;
 
@@ -274,4 +283,5 @@ module.exports = {
   generateAllUsersGraphData,
   verifyToken,
   deleteAdminAccount,
+  getUser
 };
