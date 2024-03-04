@@ -43,14 +43,14 @@ router.get("/generate_graph/:year",adminAuth,generateAllUsersGraphData);
 router.delete("/delete_user/:userId",adminAuth,deleteAccount)
 
 // restrict user
-router.put("restrict/user/:userId",adminAuth, restrictUser)
+router.put("/restrict/user/:userId",adminAuth, restrictUser)
 
 
 // restrict admin
-router.put("restrict/admin/:adminId",adminAuth, restrictAdmin)
+router.put("/restrict/admin/:adminId",adminAuth, restrictAdmin)
 
 
 // activate user
-router.put("activate/:userId",adminAuth, activateAccount)
+router.put("/activate/:userId",adminAuth, activateAccount)
 
 module.exports = router
