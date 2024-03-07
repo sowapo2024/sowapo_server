@@ -5,11 +5,11 @@ const Announcements = require('../../models/announcement'); // Replace 'yourAnno
 // Create Announcement
 exports.createAnnouncement = async (req, res) => {
   try {
-    const { title, author, callToAction, external_link, body} = req.body;
+    const { title, callToAction, external_link, body} = req.body;
     const banner = req.file?.path
     const newAnnouncement = new Announcements({
       title,
-      author,
+      author:req?.admin._id,
       callToAction,
       external_link,
       body,

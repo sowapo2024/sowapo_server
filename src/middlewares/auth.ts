@@ -61,7 +61,7 @@ const adminAuth = (req, res, next) => {
       //verify token
       const decoded = jwt.verify(token, jwtAdminSecret);
   
-      // add user from token payload which contains the user id we attached to the token
+      // add admin from token payload which contains the user id we attached to the token
       req.admin = decoded;
   
     next();
