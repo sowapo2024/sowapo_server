@@ -32,7 +32,7 @@ exports.makeDonation = async (req, res) => {
         email,
         currency,
         type: type,
-        user: mongoose.Types.Schema.ObjectId(req?.user?.id)
+        user: req?.user?.id
       });
 
       transaction.save()
@@ -45,6 +45,7 @@ exports.makeDonation = async (req, res) => {
         return res.status(400).json({message:"provide all required fields"})
     }
   } catch (error) {
+    console.log(error)
     return res.status(500).json({ message: 'something went wrong', error });
   }
 };
