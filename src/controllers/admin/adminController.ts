@@ -1,8 +1,8 @@
-const Admin = require("../../models/admin");
+
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const Users = require("../../models/Users");
-
+const Admin = require("../../models/admin")
 const adminSignup = async (req, res) => {
   const { firstName, lastName, email, password,verifyPassword, role } = req.body;
 
@@ -207,6 +207,36 @@ const getUser = (req, res) => {
       res.status(500).json({ error: err, message: 'user not found' });
     });
 };
+const getAdmin = (req, res) => {
+  Admin.findById(req.params.adminId)
+    .select('-password')
+    .then((admin) => res.status(200).json({ admin: admin, message: 'admin found' }))
+    .catch((err) => {
+      res.status(500).json({ error: err, message: 'admin not found' });
+    });
+};
+
+const updateAdmin = async (req,res)=>{
+  // const { firstName, lastName, email, password, role }  = req.body
+  const {id} = req.admin
+  try {
+    const admin = await Admin.findByIdAndUpdate(id,req.body,{new:true})
+    res.staus(201).json({message:"admin updated"})
+  } catch (error) {
+    res.staus(500).json({message:"something went wrong, could not update admin"})
+    
+  }
+  
+}
+
+const getAllAdmin = (req, res) => {
+  Admin.find()
+    .select('-password')
+    .then((admin) => res.status(200).json({ admin: admin, message: 'user found' }))
+    .catch((err) => {
+      res.status(500).json({ error: err, message: 'user not found' });
+    });
+};
 
 const deleteAdminAccount = async (req, res) => {
   const { adminId } = req.params;
@@ -272,6 +302,34 @@ const activateAccount = async (req, res) => {
     });
   }
 };
+
+const activateAdminAccount = async (req, res) => {
+  const { adminId } = req.params;
+
+  try {
+    const admin = await Admin.findById(adminId);
+    if (admin.isBanned) {
+      await Admin.findByIdAndUpdate(adminId, { $set: { isBanned: false } });
+      return res.status(201).json({
+        message: "user re-activated",
+      });
+    } else if (admin.isSuspended) {
+      await Admin.findByIdAndUpdate(adminId, { $set: { isSuspended: false } });
+      return res.status(201).json({
+        message: "admin re-activated",
+      });
+    } else {
+      return res.status(400).json({
+        message: "admin is already active",
+      });
+    }
+  } catch (error) {
+    return res.status(500).json({
+      message: "something went wrong: account could not be reactivated",
+      error,
+    });
+  }
+};
 module.exports = {
   restrictAdmin,
   restrictUser,
@@ -283,5 +341,9 @@ module.exports = {
   generateAllUsersGraphData,
   verifyToken,
   deleteAdminAccount,
-  getUser
+  getUser,
+  getAdmin,
+  updateAdmin,
+  getAllAdmin,
+  activateAdminAccount
 };

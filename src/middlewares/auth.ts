@@ -20,7 +20,7 @@ const auth = (req, res, next) => {
   
       // restrict all permissions from the restricted users
       if (req.user.isSuspended) {
-        res.status(401).json({ message: "Your account is banned, contact us" });
+       return res.status(401).json({ message: "Your account is banned, contact us" });
       } else next();
     } catch (error) {
       if (error instanceof jwt.TokenExpiredError) {

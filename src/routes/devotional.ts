@@ -14,16 +14,16 @@ router.post('/create',adminAuth, singleImage, devotionalController.createDevotio
 router.post('/reply/:id', auth, subscriptionAuth, devotionalController.replyDevotional);
 
 // Route to update a devotional
-router.put('/update/:id', auth, subscriptionAuth, devotionalController.updateDevotional);
+router.put('/update/:id', adminAuth, subscriptionAuth, devotionalController.updateDevotional);
 
 // Route to get all devotionals
-router.get('/', auth, subscriptionAuth, devotionalController.getAllDevotionals);
+router.get('/get', auth, subscriptionAuth, devotionalController.getAllDevotionals);
 
 // Route to get daily devotional by date
-router.get('/daily', devotionalController.getDailyDevotional);
+router.get('/daily', auth, subscriptionAuth,  devotionalController.getDailyDevotional);
 
 // Route to delete a devotional
-router.delete('/:id', adminAuth, devotionalController.deleteDevotional);
+router.delete('delete/:id', adminAuth, devotionalController.deleteDevotional);
 
 // Route to subscribe to devotionals
 router.post('/subscribe',auth, devotionalController.subscribeToDevotionals);

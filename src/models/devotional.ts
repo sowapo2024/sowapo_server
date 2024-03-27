@@ -29,7 +29,7 @@ const devotionalSchema = new mongoose.Schema(
       type: String,
       required: true,
     },
-    media_url: {
+    imageUrl: {
       type: String,
     },
     views: [
