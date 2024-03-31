@@ -9,6 +9,7 @@ const UserSchema = new Schema({
   about: {type:String},
   phone: { type: String },
   email: { type: String, unique: true,default:`default${String(Math.random()* Date.now())}@gmail.com`,required:[true,'email must be provided'] },
+  email_verified: { type: Boolean,default:false },
   gender: { type: String },
   nationality: { type: String },
   avatar:{type:String},
@@ -18,6 +19,15 @@ const UserSchema = new Schema({
   },
   birthDate: { type: String },
   isSuspended: { type: Boolean,default:false },
+  pushObject:{
+    token:{
+      type:String,
+    },
+    enabled:{
+      type:Boolean,
+      default:true
+    }
+  }
 //   profileCreated:{type:Boolean,default:false},
 
 },{timestamps:true});

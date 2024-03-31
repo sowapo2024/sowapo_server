@@ -1,6 +1,6 @@
 const express = require("express");
 const router = express.Router();
-const { auth } = require("../middlewares/auth");
+const { auth,verifyOTP } = require("../middlewares/auth");
 const users_controller = require("../controllers/authentication/userController");
 const { singleImage, multipleImages,singleMulterImageHandler } = require("../middlewares/handleImageMulter");
 
@@ -78,7 +78,7 @@ router.put(
 // @access  private
 router.put(
   "/reset_password",
-  auth,
+  verifyOTP,
   users_controller.resetPassword
 );
 

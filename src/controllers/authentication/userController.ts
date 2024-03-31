@@ -2,9 +2,10 @@ const { genSalt } = require('bcrypt');
 const User = require('../../models/Users');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
-const { sendResetPasswordEmail } = require('../../utils/mailer');
+const { sendResetPasswordEmail,sendVerification } = require('../../utils/mailer');
 const path = require('path');
 const mongoose = require('mongoose');
+const {generateOTP} = require("./otp")
 
 const jwtSecret = process.env.JWT_SECRET;
 
@@ -56,6 +57,10 @@ exports.createUser = async (req, res) => {
               lastName: lastName,
             });
             user.save(user);
+            
+            const OTP = await generateOTP(email)
+            await sendVerification(email,username,OTP)
+
             return res
               .status(201)
               .json({ message: 'user registered sucessfully', id: user._id });
@@ -78,6 +83,8 @@ exports.createUser = async (req, res) => {
     return res.status(500).json({ message: 'something went wrong' });
   }
 };
+
+
 
 // handle POST request at "api/users/login"
 exports.login = async (req, res) => {
@@ -392,16 +399,14 @@ exports.forgotPasswordLink = async (req, res) => {
       const user = await User.findOne({ email: email });
 
       if (user) {
-        const token = jwt.sign({ email, id: user.id }, jwtSecret, {
-          expiresIn: '30m',
-        });
-        sendResetPasswordEmail(email, token);
-        res.status(200).json({ message: 'link sent sucessfully' });
+        const OTP = await generateOTP(email)
+        await sendResetPasswordEmail({email,username:user.username, OTP});
+        res.status(200).json({ message: 'otp sent sucessfully' });
       } else {
         res.status(400).json({ message: 'user not found' });
       }
     } catch (error) {
-      console.log(error)
+      console.log(error);
       res.status(500).json({ message: 'something went wrong', error });
     }
   } else {
@@ -441,37 +446,32 @@ exports.changePassword = async (req, res) => {
 
 //change password
 exports.resetPassword = async (req, res) => {
-  const { oldPassword, newPassword, verifyPassword } = req.body;
+  const { newPassword, verifyPassword,email } = req.body;
 
   try {
-    const user = await User.findById(req.user.id);
-    if (oldPassword && newPassword && verifyPassword) {
+    const user = await User.findOne({email});
+    if ( newPassword && verifyPassword) {
       if (user) {
-        // console.log(user);
-        const userValid = await bcrypt.compare(oldPassword, user.password);
-        if (userValid) {
-          const salt = await genSalt();
-          const hashedPassword = await bcrypt.hash(newPassword, salt);
-          if (newPassword === verifyPassword) {
-            try {
-              await User.findByIdAndUpdate(req.user.id, {
-                password: hashedPassword,
-              });
-              return res.status(201).json({
-                message: 'Password changed sucessfully',
-              });
-            } catch (error) {
-              return res.status(500).json({
-                message: 'error: Password could not be changed sucessfully',
-              });
-            }
-          } else {
-            res.status(400).json({
-              message: 'error: Passwords do not match',
+        const salt = await genSalt();
+        const hashedPassword = await bcrypt.hash(newPassword, salt);
+        if (newPassword === verifyPassword) {
+          try {
+            await User.findOneAndUpdate({email}, {
+              password: hashedPassword,
+            });
+            return res.status(201).json({
+              message: 'Password changed sucessfully',
+            });
+          } catch (error) {
+            console.log(error)
+            return res.status(500).json({
+              message: 'error: Password could not be changed sucessfully',
             });
           }
         } else {
-          return res.status(400).json({ message: 'old password incorrect' });
+          res.status(400).json({
+            message: 'error: Passwords do not match',
+          });
         }
       } else {
         res.status(400).json({ message: 'user not found' });

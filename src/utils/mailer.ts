@@ -48,20 +48,38 @@ async function sender(mailObject: MailObject) {
 const sendVerification = async ({
   email,
   username,
-  token,
+  OTP,
 }: {
   email: string;
   username: string;
-  token: string;
+  OTP: string;
 }) => {
   const html_body: string = await convertHTML(
     './src/utils/mail_templates/sendVerification.html',
     'utf-8',
-    { username: username, token: token },
+    { username: username, OTP },
   );
   await sender({ html: html_body, to: email, subject: 'Calvary greetings' });
 };
 
+const sendResetPasswordEmail = async ({
+  email,
+  username,
+  OTP,
+}: {
+  email: string;
+  username: string;
+  OTP: string;
+}) => {
+  const html_body: string = await convertHTML(
+    './src/utils/mail_templates/sendVerification.html',
+    'utf-8',
+    { username: username, OTP },
+  );
+  await sender({ html: html_body, to: email, subject: 'Forgot password OTP' });
+};
+
+// send Donation Reciept
 const sendDonationReciept = async ({
   email,
   amount,
@@ -86,6 +104,7 @@ const sendDonationReciept = async ({
 
 };
 
+// book reciept mail
 const sendBookReciept = async ({
   email,
   amount,
@@ -120,4 +139,5 @@ module.exports = {
   sendBookReciept,
   sendVerification,
   sendDonationReciept,
+  sendResetPasswordEmail
 };

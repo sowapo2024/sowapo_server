@@ -1,6 +1,8 @@
 const jwt = require("jsonwebtoken");
 const jwtSecret = process.env.JWT_SECRET;
 const jwtAdminSecret = process.env.JWT_ADMIN_SECRET;
+const OTP = require("../models/otp")
+
 
 const auth = (req, res, next) => {
     const token = req.header("x-auth-token");
@@ -89,5 +91,41 @@ const adminAuth = (req, res, next) => {
     }
   };
 
+  // verifyOTP middleware
+  const verifyOTP = async (req, res,next) => {
+    const { email, otp } = req.body;
 
-  module.exports = {auth,adminAuth}
+    if (!email || !otp) {
+        return res.status(400).json({ message: 'Email and OTP are required.' });
+    }
+
+    try {
+        const otpDocument = await OTP.findOne({ email: email, otp: otp });
+
+        if (!otpDocument) {
+            return res.status(404).json({ message: 'OTP is incorrect or does not exist.' });
+        }
+
+        // Check if the OTP has expired
+        const currentTime = Date.now();
+        if (currentTime - otpDocument.expires > 300000) {
+            // Optionally, delete the expired OTP document here
+            // await otpDocument.remove();
+            return res.status(410).json({ message: 'OTP has expired.' });
+        }
+
+        // OTP is correct and has not expired
+        // Here, you can proceed with the user verification process
+
+        // Optionally, delete the OTP document after successful verification
+        OTP.findOneAndDelete({otp})
+
+        next()
+    } catch (error) {
+        console.error('Error verifying OTP:', error);
+        res.status(500).json({ message: 'Internal server error.' });
+    }
+}
+
+
+  module.exports = {auth,adminAuth,verifyOTP}
