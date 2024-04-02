@@ -11,7 +11,7 @@ let i =0
 // @desc    send user data for registeration
 // @access  public
 router.post("/register",users_controller.createUser );
-router.post("/register_push_token",pushNotification.registerToken);
+router.post("/register_push_token",auth,pushNotification.registerToken);
 
 
 // @route   POST api/users/login
