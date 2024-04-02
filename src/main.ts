@@ -124,7 +124,7 @@ app.use((error, req, res, next) => {
 // Schedule the function to run at 6 AM every day
 cron.schedule('0 6 * * *', sendDailyDevotionReminder, {
   scheduled: true,
-  timezone: "Your/Timezone" // Replace 'Your/Timezone' with the appropriate timezone
+  timezone: "Africa/Lagos" // Replace 'Your/Timezone' with the appropriate timezone
 });
 
 
