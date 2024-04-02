@@ -1,6 +1,7 @@
 const Post = require('../../models/post');
 const mongoose = require('mongoose');
 const { Types } = mongoose;
+const {sendGeneralPushNotification} = require("../../external-apis/expo-push-notification")
 
 interface Request_body {
   title: string;
@@ -34,6 +35,9 @@ exports.createPost = async (req, res) => {
       audience,
     });
     const savedPost = await newPost.save();
+
+    await sendGeneralPushNotification({title:"New post", subtitle:title, body:description.slice(0,100)+ " read more..."})
+
 
     res.status(201).json({data:savedPost,message:"post created successfully"});
   } catch (error) {

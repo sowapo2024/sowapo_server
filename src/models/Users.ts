@@ -26,7 +26,8 @@ const UserSchema = new Schema({
     enabled:{
       type:Boolean,
       default:true
-    }
+    },
+    latestTicket:String
   }
 //   profileCreated:{type:Boolean,default:false},
 

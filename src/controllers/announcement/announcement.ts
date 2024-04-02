@@ -1,4 +1,4 @@
-
+const {sendGeneralPushNotification} = require("../../external-apis/expo-push-notification")
 
 const Announcements = require('../../models/announcement'); // Replace 'yourAnnouncementModel' with the actual file path of your model
 
@@ -17,6 +17,8 @@ exports.createAnnouncement = async (req, res) => {
     });
     const savedAnnouncement = await newAnnouncement.save();
 
+    await sendGeneralPushNotification({title:"New Announcement", subtitle:title, body:body.slice(0,100)+ " read more..."})
+  
     res.status(201).json({ data: savedAnnouncement, message: 'Announcement created successfully' });
   } catch (error) {
     console.error('Error in createAnnouncement:', error);

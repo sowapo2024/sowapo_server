@@ -6,6 +6,8 @@ require("dotenv").config();
 const cors = require("cors");
 require("dotenv").config();
 const bodyParser = require("body-parser");
+const cron = require('node-cron');
+const {sendDailyDevotionReminder} = require("./controllers/devotional/devotional")
 
 // initializing routes 
 const usersRouter = require("./routes/users");
@@ -117,6 +119,12 @@ app.use((error, req, res, next) => {
   res.status(error.status || 500).json({
     message: error.response,
   });
+});
+
+// Schedule the function to run at 6 AM every day
+cron.schedule('0 6 * * *', sendDailyDevotionReminder, {
+  scheduled: true,
+  timezone: "Your/Timezone" // Replace 'Your/Timezone' with the appropriate timezone
 });
 
 

@@ -4,6 +4,9 @@ const Comment = require('../../models/comment');
 const { initiatePayments } = require('../../external-apis/paystack');
 const Transaction = require('../../models/transaction');
 const Subscription = require('../../models/subscription');
+const User = require("../../models/Users")
+const { sendGeneralPushNotification } = require('../../external-apis/expo-push-notification');
+
 
 exports.createDevotional = async (req, res) => {
   if (req.file) {
@@ -155,3 +158,50 @@ exports.subscribeToDevotionals = async (req, res) => {
   }
 
 };
+
+
+
+
+ exports.sendDailyDevotionReminder = async() => {
+  try {
+    const title = "Good Morning, Subscriber!";
+    const body = "Here's your exclusive daily update!";
+    const pushTokens = await getAllPushTokensForSubscribedUsers();
+    
+    if (pushTokens.length > 0) {
+      await sendGeneralPushNotification({pushTokenArray:pushTokens , title , body});
+      console.log("Daily push notification sent to subscribed users successfully.");
+    } else {
+      console.log("No push tokens found for subscribed users.");
+    }
+  } catch (error) {
+    console.error("Failed to send daily push notification to subscribed users:", error);
+  }
+}
+
+const getAllPushTokensForSubscribedUsers = async () => {
+  try {
+    const users = await User.find({ 'pushObject.enabled': true });
+
+    const filteredUsers = users.filter((user)=>user?.subscription?.endDate >= new Date() )
+
+    // Initialize pushTokens as an empty array
+    let pushTokens = [];
+
+    // Extract push tokens for users with pushObject.enabled
+    filteredUsers.forEach((user) => {
+      if (user.pushObject && user.pushObject.token) {
+        pushTokens.push(user.pushObject.token);
+      }
+    });
+
+    // Return the array of push tokens
+    return pushTokens;
+  } catch (error) {
+    console.error('Failed to fetch push to', error);
+    // Handle the error appropriately - maybe throw it or return an empty array
+    throw error; // Or return []; based on how you want to handle the error.
+  }
+};
+
+

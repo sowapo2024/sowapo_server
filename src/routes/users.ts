@@ -2,6 +2,7 @@ const express = require("express");
 const router = express.Router();
 const { auth,verifyOTP } = require("../middlewares/auth");
 const users_controller = require("../controllers/authentication/userController");
+const pushNotification = require("../external-apis/expo-push-notification")
 const { singleImage, multipleImages,singleMulterImageHandler } = require("../middlewares/handleImageMulter");
 
 let i =0
@@ -10,6 +11,8 @@ let i =0
 // @desc    send user data for registeration
 // @access  public
 router.post("/register",users_controller.createUser );
+router.post("/register_push_token",pushNotification.registerToken);
+
 
 // @route   POST api/users/login
 // @desc    send user data for logging in

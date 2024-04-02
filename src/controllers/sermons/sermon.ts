@@ -1,6 +1,7 @@
 const Sermon = require('../../models/sermon');
 const mongoose = require('mongoose');
 const { Types } = mongoose;
+const {sendGeneralPushNotification} = require("../../external-apis/expo-push-notification")
 
 interface Request_body {
   title: string;
@@ -34,7 +35,9 @@ exports.createSermon = async (req, res) => {
     });
     const savedSermon = await newSermon.save();
 
-    res.status(201).json(savedSermon);
+    await sendGeneralPushNotification({title:"New Sermon  ", subtitle:title, body:description.slice(0,100)+ " read more..."})
+
+    res.status(201).json({data:savedSermon, message:"sermon created"});
   } catch (error) {
     console.error('Error creating Sermon:', error);
     res.status(500).json({ error: 'Internal Server Error', errorStack: error });
