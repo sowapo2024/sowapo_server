@@ -35,10 +35,17 @@ const registerToken = async (req, res) => {
 };
 
 // Note: Adjust types if using TypeScript and ensure the rest of the environment is configured for TS
-const sendGeneralPushNotification = async ( {title, subtitle, body}) => {
+const sendGeneralPushNotification = async ( {pushTokenArray,title, subtitle, body}) => {
   let messages = [];
+let pushTokens = []
 
-  const pushTokens = await getAllPushTokens()
+if (pushTokenArray) {
+  pushTokens = pushTokenArray
+}
+else{
+  pushTokens = await getAllPushTokens()
+
+}
   // Corrected check for empty array
   if (pushTokens.length === 0) {
     throw new Error("No push token found");
