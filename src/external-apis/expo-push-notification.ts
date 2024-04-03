@@ -25,6 +25,7 @@ const registerToken = async (req, res) => {
     } catch (error) {
       return res.status(500).json({
         message: 'Something went wrong: pushToken could not be added',
+        error:error
       });
     }
   } else {
@@ -78,6 +79,7 @@ else{
       tickets.push(...ticketChunk);
     } catch (error) {
       console.error(error);
+      throw error
       // Consider implementing more robust error handling here
     }
   }
@@ -91,6 +93,7 @@ else{
           await User.findOneAndUpdate({ 'pushObject.token': pushTokens[i] }, { "pushObject.latestTicket": ticket.id });
         } catch (error) {
           console.log(error, "Something went wrong while saving ticket to schema");
+          throw error
         }
       }
     });
@@ -146,6 +149,7 @@ const handleRecieptErrors = async (tickets) => {
         }
       } catch (error) {
         console.error(error);
+        throw error
       }
     }
   })();
