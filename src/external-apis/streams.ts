@@ -1,7 +1,8 @@
 const axios = require("axios")
+require("dotenv").config()
 
-const apiKey = 'YOUR_API_KEY';
-const channelId = 'CHANNEL_ID';
+const apiKey = process.env.YOUTUBE_CHANNEL_ID;
+const channelId = process.env.YOUTUBE_API_KEY;
 exports.fetchLiveStreams = async (req, res) => {
     try {
       // Fetch the channel's livestreams using YouTube Data API
