@@ -125,7 +125,9 @@ exports.login = async (req, res) => {
         {
           id: user._id,
           username: user.userName,
-          isSuspended: user.isSuspended
+          isSuspended: user.isSuspended,
+          email:user.email,
+          subscription:user.subscription
         },
         jwtSecret,
         { expiresIn: '3d' },
