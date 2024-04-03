@@ -1,8 +1,8 @@
 const axios = require("axios")
 require("dotenv").config()
 
-const apiKey = process.env.YOUTUBE_CHANNEL_ID;
-const channelId = process.env.YOUTUBE_API_KEY;
+const  channelId= process.env.YOUTUBE_CHANNEL_ID;
+const apiKey = process.env.YOUTUBE_API_KEY;
 exports.fetchLiveStreams = async (req, res) => {
     try {
       // Fetch the channel's livestreams using YouTube Data API
@@ -26,6 +26,7 @@ exports.fetchLiveStreams = async (req, res) => {
       res.json({data:liveStreamData,message:"Fetched streams successfully"});
     } catch (error) {
       console.error('Error fetching livestreams:', error.message);
+      console.log(error)
       res.status(500).json({ error: error,message:"internal server error" });
     }
   }
