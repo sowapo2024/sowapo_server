@@ -2,10 +2,13 @@ const { genSalt } = require('bcrypt');
 const User = require('../../models/Users');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
-const { sendResetPasswordEmail,sendVerification } = require('../../utils/mailer');
+const {
+  sendResetPasswordEmail,
+  sendVerification,
+} = require('../../utils/mailer');
 const path = require('path');
 const mongoose = require('mongoose');
-const {generateOTP} = require("./otp")
+const { generateOTP } = require('./otp');
 
 const jwtSecret = process.env.JWT_SECRET;
 
@@ -57,9 +60,9 @@ exports.createUser = async (req, res) => {
               lastName: lastName,
             });
             user.save(user);
-            
-            const OTP = await generateOTP(email)
-            await sendVerification(email,username,OTP)
+
+            const OTP = await generateOTP(email);
+            await sendVerification({ email, username, OTP });
 
             return res
               .status(201)
@@ -84,7 +87,22 @@ exports.createUser = async (req, res) => {
   }
 };
 
+exports.verifyEmail = async (req, res) => {
+  const { email } = req.body;
 
+  try {
+    const user = await User.findOneAndUpdate(
+      { email },
+      { email_verified: true },
+    );
+
+    res.status(201).json({message:"email verified successfully"})
+  } catch (error) {
+    console.log(error)
+    return res.status(500).json({message:"email not verified",error})
+
+  }
+};
 
 // handle POST request at "api/users/login"
 exports.login = async (req, res) => {
@@ -126,8 +144,8 @@ exports.login = async (req, res) => {
           id: user._id,
           username: user.userName,
           isSuspended: user.isSuspended,
-          email:user.email,
-          subscription:user.subscription
+          email: user.email,
+          subscription: user.subscription,
         },
         jwtSecret,
         { expiresIn: '3d' },
@@ -402,8 +420,8 @@ exports.forgotPasswordLink = async (req, res) => {
       const user = await User.findOne({ email: email });
 
       if (user) {
-        const OTP = await generateOTP(email)
-        await sendResetPasswordEmail({email,username:user.username, OTP});
+        const OTP = await generateOTP(email);
+        await sendResetPasswordEmail({ email, username: user.username, OTP });
         res.status(200).json({ message: 'otp sent sucessfully' });
       } else {
         res.status(400).json({ message: 'user not found' });
@@ -449,24 +467,27 @@ exports.changePassword = async (req, res) => {
 
 //change password
 exports.resetPassword = async (req, res) => {
-  const { newPassword, verifyPassword,email } = req.body;
+  const { newPassword, verifyPassword, email } = req.body;
 
   try {
-    const user = await User.findOne({email});
-    if ( newPassword && verifyPassword) {
+    const user = await User.findOne({ email });
+    if (newPassword && verifyPassword) {
       if (user) {
         const salt = await genSalt();
         const hashedPassword = await bcrypt.hash(newPassword, salt);
         if (newPassword === verifyPassword) {
           try {
-            await User.findOneAndUpdate({email}, {
-              password: hashedPassword,
-            });
+            await User.findOneAndUpdate(
+              { email },
+              {
+                password: hashedPassword,
+              },
+            );
             return res.status(201).json({
               message: 'Password changed sucessfully',
             });
           } catch (error) {
-            console.log(error)
+            console.log(error);
             return res.status(500).json({
               message: 'error: Password could not be changed sucessfully',
             });

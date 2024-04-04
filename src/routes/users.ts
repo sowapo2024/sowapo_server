@@ -11,7 +11,18 @@ let i =0
 // @desc    send user data for registeration
 // @access  public
 router.post("/register",users_controller.createUser );
+
+// register push token
 router.post("/register_push_token",auth,pushNotification.registerToken);
+
+
+// verify user email
+
+router.put(
+  "/verify_email",
+  verifyOTP,
+  users_controller.verifyEmail
+);
 
 
 // @route   POST api/users/login
