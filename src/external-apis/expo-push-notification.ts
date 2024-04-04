@@ -1,5 +1,5 @@
 const { Expo } = require('expo-server-sdk');
-const { User } = require('../models/Users');
+const  User  = require('../models/Users');
 
 // Create a new Expo SDK client
 // optionally providing an access token if you have enabled push security
@@ -12,6 +12,8 @@ const registerToken = async (req, res) => {
   const { id } = req.user;
   const { pushToken } = req.body;
 
+  console.log(pushToken,"pushToken")
+
   if (pushToken) {
     try {
       const pushObject = {
@@ -23,6 +25,7 @@ const registerToken = async (req, res) => {
         .status(200)
         .json({ message: 'PushToken registered sucessfully' });
     } catch (error) {
+      console.log(error)
       return res.status(500).json({
         message: 'Something went wrong: pushToken could not be added',
         error:error
