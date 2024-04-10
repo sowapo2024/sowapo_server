@@ -7,9 +7,9 @@ const post = new mongoose.Schema({
         required:[true,"Post must have a title"]
     },
     author:{
-        type:mongoose.Schema.Types.ObjectId,
-        // required:[true,"Post must have an author"],
-        ref: "Admin"
+        type:String,
+        // // required:[true,"Post must have an author"],
+        // ref: "Admin"
     },
     description:{
         type: String,
@@ -26,7 +26,7 @@ const post = new mongoose.Schema({
     }],
     audience:{
       type:String,
-      enum:["agape","amplified","children","all"],
+      enum:["agape","amplified","children","all", "papa","mama","pastor_dotun"],
       required:[true,"Post must have an audience"]
     },
     tag:{

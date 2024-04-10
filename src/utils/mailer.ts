@@ -72,7 +72,7 @@ const sendResetPasswordEmail = async ({
   OTP: string;
 }) => {
   const html_body: string = await convertHTML(
-    './src/utils/mail_templates/sendVerification.html',
+    './src/utils/mail_templates/sendPasswordOTP.html',
     'utf-8',
     { username: username, OTP },
   );

@@ -34,7 +34,7 @@ router.post("/login",adminSignIn);
 router.get("/get_users",adminAuth,users_controller.getUsers);
 
 // get all admins
-router.get("/get_users",adminAuth,getAllAdmin);
+router.get("/get_admins",adminAuth,getAllAdmin);
 
 
 // verify_token

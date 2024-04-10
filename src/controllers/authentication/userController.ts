@@ -111,8 +111,8 @@ exports.login = async (req, res) => {
   if (emailOrUsername && password) {
     try {
       const user =
-        (await User.findOne({ username: emailOrUsername })) ||
-        (await User.findOne({ email: emailOrUsername }));
+        (await User.findOne({ username: emailOrUsername })).populate("subscription") ||
+        (await User.findOne({ email: emailOrUsername })).populate("subscription");
       if (user) {
         comparePassword(user);
       } else {
