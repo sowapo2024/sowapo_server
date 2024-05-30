@@ -30,3 +30,7 @@ build/
 
 #env file
 .env
+
+# serviceAccount
+
+serviceAccount.json

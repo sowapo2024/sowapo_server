@@ -1,12 +1,13 @@
 // pushNotificationService.js
 
 const admin = require('firebase-admin');
-const serviceAccount = require('../../serviceAccount.json'); // Path to your Firebase service account key file
+// Parse the JSON string from the environment variable
+const serviceAccount = JSON.parse(process.env.SERVICE_ACCOUNT);
 
 const { getAllPushTokens } = require('./expo-push-notification');
 
 const Influencers = require('../models/Influencer');
-
+require("dotenv").config()
 admin.initializeApp({
   credential: admin.credential.cert(serviceAccount),
 });
