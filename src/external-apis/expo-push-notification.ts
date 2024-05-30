@@ -1,5 +1,5 @@
 const { Expo } = require('expo-server-sdk');
-const  User  = require('../models/Users');
+const  User  = require('../models/Influencer');
 
 // Create a new Expo SDK client
 // optionally providing an access token if you have enabled push security

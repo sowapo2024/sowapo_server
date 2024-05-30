@@ -1,7 +1,7 @@
 
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
-const Users = require("../../models/Users");
+const Influencer = require("../../models/Influencer");
 const Admin = require("../../models/admin")
 const adminSignup = async (req, res) => {
   const { firstName, lastName, email, password,verifyPassword, role } = req.body;
@@ -88,12 +88,12 @@ const adminSignIn = async (req, res) => {
 // const getAccounts = ()=>{
 
 // }
-const generateAllUsersGraphData = async (req, res) => {
+const generateAllInfluencerGraphData = async (req, res) => {
   const { year } = req.params;
 
   try {
     // Query the database to get sales data for the specified year and seller
-    const usersData = await Users.aggregate([
+    const InfluencerData = await Influencer.aggregate([
       {
         $match: {
           createdAt: {
@@ -129,7 +129,7 @@ const generateAllUsersGraphData = async (req, res) => {
     ];
 
     // Update the monthly data with actual sales totals
-    usersData.forEach((sale) => {
+    InfluencerData.forEach((sale) => {
       const monthIndex = sale._id - 1;
       monthlyData[monthIndex].totalUser = sale.totalUser;
     });
@@ -139,7 +139,7 @@ const generateAllUsersGraphData = async (req, res) => {
     console.log(err);
     res
       .status(500)
-      .json({ message: "Error generating users graph data", error: err });
+      .json({ message: "Error generating Influencer graph data", error: err });
   }
 };
 
@@ -148,7 +148,7 @@ const deleteAccount = async (req, res) => {
   const { userId } = req.params;
 
   try {
-    await Users.findOneAndDelete({ _id: userId });
+    await Influencer.findOneAndDelete({ _id: userId });
     return res.status(201).json({
       message: "user deleted",
     });
@@ -165,7 +165,7 @@ const restrictUser = async (req, res) => {
 
 
   try {
-    const user = await Users.findByIdAndUpdate(userId, {
+    const user = await Influencer.findByIdAndUpdate(userId, {
       $set: { isSuspended: true },
     });
     return res.status(201).json({
@@ -200,7 +200,7 @@ const restrictAdmin = async (req, res) => {
 };
 
 const getUser = (req, res) => {
-  Users.findById(req.params.userId)
+  Influencer.findById(req.params.userId)
     .select('-password')
     .then((user) => res.status(200).json({ user: user, message: 'user found' }))
     .catch((err) => {
@@ -258,7 +258,7 @@ const banAccount = async (req, res) => {
   const { userId } = req.params;
 
   try {
-    await Users.findByIdAndUpdate(userId, { $set: { isBanned: true } });
+    await Influencer.findByIdAndUpdate(userId, { $set: { isBanned: true } });
     return res.status(201).json({
       message: "user banned",
     });
@@ -279,14 +279,14 @@ const activateAccount = async (req, res) => {
   const { userId } = req.params;
 
   try {
-    const user = await Users.findById(userId);
+    const user = await Influencer.findById(userId);
     if (user.isBanned) {
-      await Users.findByIdAndUpdate(userId, { $set: { isBanned: false } });
+      await Influencer.findByIdAndUpdate(userId, { $set: { isBanned: false } });
       return res.status(201).json({
         message: "user re-activated",
       });
     } else if (user.isSuspended) {
-      await Users.findByIdAndUpdate(userId, { $set: { isSuspended: false } });
+      await Influencer.findByIdAndUpdate(userId, { $set: { isSuspended: false } });
       return res.status(201).json({
         message: "user re-activated",
       });
@@ -338,7 +338,7 @@ module.exports = {
   deleteAccount,
   adminSignIn,
   adminSignup,
-  generateAllUsersGraphData,
+  generateAllInfluencerGraphData,
   verifyToken,
   deleteAdminAccount,
   getUser,

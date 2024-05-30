@@ -1,43 +1,41 @@
 const { genSalt } = require('bcrypt');
-const User = require('../../models/Users');
+const Brand = require('../../models/brand');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
+const { initiatePayments } = require('../../external-apis/paystack');
+const Transaction = require('../../models/transaction');
+
 const {
   sendResetPasswordEmail,
   sendVerification,
 } = require('../../utils/mailer');
 const path = require('path');
 const mongoose = require('mongoose');
-const { generateOTP } = require('./otp');
+const { generateOTP } = require('../authentication/otp');
 
-const jwtSecret = process.env.JWT_SECRET;
+const jwtSecret = process.env.JWT_BRAND_SECRET;
 
 function validateVariable(variable) {
   return typeof variable !== 'undefined';
 }
 
 // handle post requests at "api/users/register"
-exports.createUser = async (req, res) => {
+exports.register = async (req, res) => {
   try {
     // create a new user after validating and sanitzing
-    const { password, verifyPassword, username, email, firstName, lastName } =
+    const { password, verifyPassword, username, email, name, ...others } =
       req.body;
 
-    console.log('register request', req.body, username);
 
     // if ( username || password ) this is wrong, it'll be true if any one of them is containing a value
 
-    if (
-      validateVariable(username) &&
-      validateVariable(password) &&
-      validateVariable(email)
-    ) {
-      const usernameExist = await User.findOne({ username: username });
-      const emailExist = await User.findOne({ email });
+    if (validateVariable(password) && validateVariable(email)) {
+      const usernameExist = await Brand.findOne({ name: name });
+      const emailExist = await Brand.findOne({ email });
 
       if (usernameExist) {
         return res.status(400).json({
-          message: `username already exists ${username}`,
+          message: `brand name already exists ${name}`,
           usernameExist,
         });
       } else if (emailExist) {
@@ -50,23 +48,21 @@ exports.createUser = async (req, res) => {
           const hashedPassword = await bcrypt.hash(password, salt);
 
           try {
-            const user = await User.create({
-              password: hashedPassword,
-              username:
-                username ||
-                firstName + `${String(Math.random() * Date.now()).slice(0, 5)}`,
+            const brand = await Brand.create({
               email: email,
-              firstName: firstName,
-              lastName: lastName,
+              name: name,
+              ...others,
+              password: hashedPassword,
             });
-            user.save(user);
+            brand.save(brand);
 
             const OTP = await generateOTP(email);
             await sendVerification({ email, username, OTP });
 
-            return res
-              .status(201)
-              .json({ message: 'user registered sucessfully', id: user._id });
+            return res.status(201).json({
+              message: 'user registered sucessfully',
+              id: brand._id,
+            });
           } catch (error) {
             console.log(error);
             return res
@@ -91,16 +87,15 @@ exports.verifyEmail = async (req, res) => {
   const { email } = req.body;
 
   try {
-    const user = await User.findOneAndUpdate(
+    const brand = await Brand.findOneAndUpdate(
       { email },
       { email_verified: true },
     );
 
-    res.status(201).json({message:"email verified successfully"})
+    res.status(201).json({ message: 'email verified successfully' });
   } catch (error) {
-    console.log(error)
-    return res.status(500).json({message:"email not verified",error})
-
+    console.log(error);
+    return res.status(500).json({ message: 'email not verified', error });
   }
 };
 
@@ -110,21 +105,22 @@ exports.login = async (req, res) => {
   const { emailOrUsername, password } = userInfo;
   if (emailOrUsername && password) {
     try {
-      const user =
-        (await User.findOne({ username: emailOrUsername })).populate("subscription") ||
-        (await User.findOne({ email: emailOrUsername })).populate("subscription");
-      if (user) {
-        comparePassword(user);
+      const brand = await Brand.findOne({ email: emailOrUsername })
+        ?.populate('subscription')
+        .exec();
+      if (brand) {
+        console.log(brand, 'brand');
+        comparePassword(brand);
       } else {
-        res.status(400).json({ message: 'user does not exist' });
+        res.status(400).json({ message: 'brand does not exist' });
       }
     } catch (error) {
       console.log(error);
       res.status(400).json({ message: 'something went wrong', error });
     }
-    // compare the encrypted password with one the user provided
-    function comparePassword(user) {
-      bcrypt.compare(password, user.password).then((isMatch) => {
+    // compare the encrypted password with one the brand provided
+    function comparePassword(brand) {
+      bcrypt.compare(password, brand.password).then((isMatch) => {
         // if the password doesn't match, return a message
         if (!isMatch) {
           return res.status(400).json({
@@ -132,20 +128,21 @@ exports.login = async (req, res) => {
           });
           // if it matches generate a new token and send everything is json
         } else {
-          generateNewToken(user);
+          generateNewToken(brand);
         }
       });
     }
 
     // generate new token with the new data
-    function generateNewToken(user) {
+    function generateNewToken(brand) {
       jwt.sign(
         {
-          id: user._id,
-          username: user.userName,
-          isSuspended: user.isSuspended,
-          email: user.email,
-          subscription: user.subscription,
+          id: brand._id,
+          username: brand.userName,
+          type: brand.accountType,
+          isSuspended: brand.isSuspended,
+          email: brand.email,
+          subscription: brand.subscription,
         },
         jwtSecret,
         { expiresIn: '3d' },
@@ -169,78 +166,76 @@ exports.login = async (req, res) => {
 
 exports.createProfile = async (req, res) => {
   const { id } = req.user;
-  const { address, about, firstName, lastName } = req.body;
+  const { address, about, interests, nationality,companyRegistrationId } = req.body;
 
   try {
-    await User.findById(req.user.id, async (err, userToUpdate) => {
-      if (err) {
-        res
-          .status(400)
-          .json({ message: 'Error getting user. Please try again.' });
-      } else {
-        // Create user profile
-        let updatedUser = {
-          firstName: req.body.firstName
-            ? req.body.firstName
-            : userToUpdate.firstName,
-          lastName: req.body.lastName
-            ? req.body.lastName
-            : userToUpdate.lastName,
-          about: about ? about : userToUpdate.about,
-          address: address ? address : userToUpdate.address,
-          profileCreated: true,
-        };
+    // Find the Brand by id
+    const userToUpdate = await Brand.findById(id);
 
-        User.findByIdAndUpdate(req.user.id, updatedUser, {
-          new: true,
-          useFindAndModify: false,
-        })
-          .select('-password')
-          .then((user) => {
-            res.status(200).json({
-              message: 'Account updated',
-              user,
-            });
-          })
-          .catch((err) => {
-            res.status(400).json({ message: "Couldn't update", err });
-          });
-      }
+    if (!userToUpdate) {
+      return res.status(404).json({ message: 'Brand not found' });
+    }
+
+    if (
+      !address ||
+      !about ||
+      !interests ||
+      !companyRegistrationId ||
+      !nationality
+    )
+      return res
+        .status(400)
+        .json({ message: 'Some profile fields were not filled' });
+    // Update profile details
+    userToUpdate.address = address;
+    userToUpdate.about = about;
+    userToUpdate.interests = interests;
+    userToUpdate.companyRegistrationId = companyRegistrationId;
+    userToUpdate.nationality = nationality;
+    userToUpdate.profileCreated = true;
+
+    // Save the updated user
+    const updatedBrand = await userToUpdate.save();
+
+    res.status(201).json({
+      message: 'Profile created',
+      Brand: updatedBrand,
     });
   } catch (error) {
-    res.status(500).json({ message: 'profile created' });
+    console.log(error)
+    res.status(500).json({ message: 'internal server error', error });
   }
 };
 
 // handle get request at "/api/users/user"
-exports.getUser = (req, res) => {
-  User.findById(req.user.id)
+exports.getBrand = (req, res) => {
+  Brand.findById(req.user.id)
     .select('-password')
-    .then((user) => res.status(200).json({ user: user, message: 'user found' }))
+    .then((user) => res.status(200).json({ data: user, message: 'user found' }))
     .catch((err) => {
       res.status(500).json({ error: err, message: 'user not found' });
     });
 };
 
 // get all users"
-exports.getUsers = (req, res) => {
-  User.find()
+exports.getBrands = (req, res) => {
+  Brand.find()
     .select('-password')
-    .then((user) => res.json({ users: user, message: 'request sucessful' }));
+    .then((brands) => res.json({ data: brands, message: 'request sucessful' }));
 };
 
 // get all restricted users
-exports.getRestrictedUsers = (req, res) => {
-  User.find({ isRestricted: true })
+exports.getRestrictedbrands = (req, res) => {
+  Brand.find({ isRestricted: true })
     .select('-password')
-    .then((user) => res.json({ users: user, message: 'request sucessful' }));
+    .then((brands) => res.json({ data: brands, message: 'request sucessful' }));
 };
 
 // handle PUT at api/users/edit_account to edit user data
-exports.editUser = async (req, res) => {
+exports.editBrand = async (req, res) => {
   try {
     // Find the user to update
-    const userToUpdate = await User.findById(req.user.id);
+    const userToUpdate = await Brand.findById(req.user.id);
 
     if (!userToUpdate) {
       return res.status(404).json({ message: 'User not found' });
@@ -253,15 +248,21 @@ exports.editUser = async (req, res) => {
       email: req.body.email || userToUpdate.email,
       phone: req.body.phone || userToUpdate.phone,
       username: req.body.username || userToUpdate.username,
+      nationality: req.body.nationality || userToUpdate.nationality,
+      address: req.body.address || userToUpdate.address,
+      birthDate: req.body.birthDate || userToUpdate.birthDate,
+      gender: req.body.gender || userToUpdate.gender,
+      about: req.body.about || userToUpdate.about,
+      interests: req.body.interests || userToUpdate.interests,
     };
 
     // Check if the new username or email already exists
-    const usernameExist = await User.findOne({
+    const usernameExist = await Brand.findOne({
       username: req.body.username,
       _id: { $ne: req.user.id }, // Exclude the current user from the check
     });
 
-    const emailExist = await User.findOne({
+    const emailExist = await Brand.findOne({
       email: req.body.email,
       _id: { $ne: req.user.id }, // Exclude the current user from the check
     });
@@ -279,8 +280,8 @@ exports.editUser = async (req, res) => {
     }
 
     // Update the user
-    const updatedUserResult = await User.findByIdAndUpdate(
-      req.user.id,
+    const updatedUserResult = await Brand.findByIdAndUpdate(
+      req.brand.id,
       updatedUser,
       {
         new: true,
@@ -302,9 +303,8 @@ exports.editUser = async (req, res) => {
 exports.createAvatar = async (req, res) => {
   if (req.file) {
     const { id } = req.user;
-    console.log(req.file);
     try {
-      await User.findByIdAndUpdate(
+      await Brand.findByIdAndUpdate(
         id,
         {
           $set: {
@@ -327,52 +327,51 @@ exports.createAvatar = async (req, res) => {
   }
 };
 
-//upload user Images
-exports.uploadImages = async function (req, res) {
-  try {
-    const { id } = req.user;
-
-    await req?.files?.map(async (file) => {
-      const newImage = { url: file.path, id: new mongoose.Types.ObjectId() };
-
-      console.log(newImage);
-      const user = await User.findByIdAndUpdate(id, {
-        $push: { userImages: newImage },
-      });
-    });
-
-    return res.status(201).json({ message: 'Image(s) uploaded sucessfully' });
-  } catch (error) {
-    console.log(error);
-    return res
-      .status(500)
-      .json({ message: 'Image(s) not uploaded sucessfully', error });
-  }
-};
-
-//delete user Images
-exports.deleteUserImage = function (req, res) {
-  const { id } = req.body;
-
-  const { imageId } = req.params;
-  console.log(imageId);
-  try {
-    User.updateOne(
-      { _id: id },
-      { $pull: { userImages: { _id: mongoose.Types.ObjectId(imageId) } } },
-    ).then((user) => {
-      return res.status(201).json({ message: 'Image(s) deleted sucessfully' });
-    });
-  } catch (error) {
-    return res
-      .status(500)
-      .json({ message: 'Image(s) not deleted sucessfully' });
-  }
-};
-
 // this function is called after token has been verified
 exports.verifyToken = async (req, res) => {
   res.status(200).json({ message: 'token verified' });
+};
+
+// function to subscibe an brand
+
+exports.subscribe = async (req, res) => {
+  const { email } = req.body;
+
+  let amount: string, currency: string;
+
+  amount = '1000000';
+  currency = 'NGN';
+  if (email && amount && currency) {
+    try {
+      const payment = await initiatePayments({ amount, email, currency });
+
+      const { checkout_url, message, access_code, reference } = payment;
+
+      const transaction = await Transaction.create({
+        access_code,
+        amount,
+        message,
+        reference,
+        email,
+        currency,
+        type: 'brand_subscription',
+        brand: new mongoose.Types.ObjectId(req?.user?.id),
+      });
+
+      return res
+        .status(200)
+        .json({ data: { checkout_url }, message: 'subsription complete' });
+    } catch (error) {
+      console.log(error);
+      return res
+        .status(500)
+        .json({ message: 'something went wrong, subsription failed', error });
+    }
+  } else {
+    return res
+      .status(400)
+      .json({ message: 'email, currency, amount cannot be empty' });
+  }
 };
 
 // to delete user has to verify their identity by sign
@@ -382,16 +381,16 @@ exports.deleteAccount = async (req, res) => {
   if (emailOrId && password) {
     try {
       // check if user exists
-      const user =
-        (await User.findOne({ username: emailOrId })) ||
-        (await User.findOne({ email: emailOrId }));
+      const brand =
+        (await Brand.findOne({ username: emailOrId })) ||
+        (await Brand.findOne({ email: emailOrId }));
 
-      if (user) {
+      if (brand) {
         // console.log(user);
         // verify password
-        const userValid = await bcrypt.compare(password, user.password);
+        const userValid = await bcrypt.compare(password, brand.password);
         if (userValid) {
-          await User.findByIdAndDelete(user._id);
+          await Brand.findByIdAndDelete(Brand._id);
           return res.status(201).json({
             message: 'user deleted',
           });
@@ -417,11 +416,15 @@ exports.forgotPasswordLink = async (req, res) => {
   const { email } = req.body;
   if (email) {
     try {
-      const user = await User.findOne({ email: email });
+      const brand = await Brand.findOne({ email: email });
 
-      if (user) {
+      if (brand) {
         const OTP = await generateOTP(email);
-        await sendResetPasswordEmail({ email, username: user.username, OTP });
+        await sendResetPasswordEmail({
+          email,
+          username: brand.username,
+          OTP,
+        });
         res.status(200).json({ message: 'otp sent sucessfully' });
       } else {
         res.status(400).json({ message: 'user not found' });
@@ -438,26 +441,28 @@ exports.forgotPasswordLink = async (req, res) => {
 //updates the password to the new password
 exports.changePassword = async (req, res) => {
   const { id } = req.user;
-  const { oldPassword, newPassword } = req.body;
+  const { oldPassword, newPassword, confirmPassword } = req.body;
   try {
-    const user = await User.findById(id);
-    if (user) {
-      // console.log(user);
-      const userValid = await bcrypt.compare(oldPassword, user.password);
-      if (userValid) {
-        const salt = await genSalt();
-        const hashedPassword = await bcrypt.hash(newPassword, salt);
-        await User.findByIdAndUpdate(id, {
-          password: hashedPassword,
-        });
-        return res.status(201).json({
-          message: 'Password changed sucessfully',
-        });
-      } else {
-        return res.status(400).json({ message: 'old password incorrect' });
+    if (newPassword === confirmPassword) {
+      const brand = await Brand.findById(id);
+      if (brand) {
+        // console.log(user);
+        const userValid = await bcrypt.compare(oldPassword, brand.password);
+        if (userValid) {
+          const salt = await genSalt();
+          const hashedPassword = await bcrypt.hash(newPassword, salt);
+          await Brand.findByIdAndUpdate(id, {
+            password: hashedPassword,
+          });
+          return res.status(201).json({
+            message: 'Password changed sucessfully',
+          });
+        } else {
+          return res.status(400).json({ message: 'old password incorrect' });
+        }
       }
+      res.status(400).json({ message: 'brand not found' });
     }
-    res.status(400).json({ message: 'user not found' });
   } catch (error) {
     res
       .status(400)
@@ -470,14 +475,14 @@ exports.resetPassword = async (req, res) => {
   const { newPassword, verifyPassword, email } = req.body;
 
   try {
-    const user = await User.findOne({ email });
+    const user = await Brand.findOne({ email });
     if (newPassword && verifyPassword) {
       if (user) {
         const salt = await genSalt();
         const hashedPassword = await bcrypt.hash(newPassword, salt);
         if (newPassword === verifyPassword) {
           try {
-            await User.findOneAndUpdate(
+            await Brand.findOneAndUpdate(
               { email },
               {
                 password: hashedPassword,

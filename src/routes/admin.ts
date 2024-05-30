@@ -13,10 +13,10 @@ const {
     deleteAccount,
     adminSignIn,
     adminSignup,
-    generateAllUsersGraphData,
+    generateAllInfluencerGraphData,
     verifyToken,
   } = require("../controllers/admin/adminController")
-const users_controller = require("../controllers/authentication/userController");
+const influencers_controller = require("../controllers/Influencer/index");
 
 
   const {adminAuth} = require("../middlewares/auth")
@@ -31,7 +31,7 @@ router.post("/login",adminSignIn);
 
 // get all users
 
-router.get("/get_users",adminAuth,users_controller.getUsers);
+router.get("/get_users",adminAuth,influencers_controller.getInfluencers);
 
 // get all admins
 router.get("/get_admins",adminAuth,getAllAdmin);
@@ -41,7 +41,7 @@ router.get("/get_admins",adminAuth,getAllAdmin);
 router.get("/verify_token",adminAuth,verifyToken);
 
 // get a user
-router.get("/get_user/:userId",adminAuth,getUser);
+router.get("/get_user/:userId",adminAuth,influencers_controller.getInfluencer);
 
 // get admin
 router.get("/get_admin/:adminId",adminAuth,getAdmin);
@@ -50,7 +50,7 @@ router.put("/update",adminAuth,updateAdmin);
 
 
 //generate graph data
-router.get("/generate_graph/:year",adminAuth,generateAllUsersGraphData);
+router.get("/generate_graph/:year",adminAuth,generateAllInfluencerGraphData);
 
 // delete user account
 router.delete("/delete_user/:userId",adminAuth,deleteAccount)
@@ -67,6 +67,8 @@ router.put("/restrict/admin/:adminId",adminAuth, restrictAdmin)
 
 // activate user
 router.put("/activate/:userId",adminAuth, activateAccount)
+
+
 router.put("/activate/admin/:adminId",adminAuth, activateAdminAccount)
 
 

@@ -18,13 +18,17 @@ const transaction = new mongoose.Schema({
         type:String,
         required:[true,"transaction must have a currency"],
     },
-    user:{
+    influencer:{
         type:mongoose.Types.ObjectId,
-        ref:'User'
+        ref:'Influencer'
     },
-    book:{
+    brand:{
         type:mongoose.Types.ObjectId,
-        ref:'Book'
+        ref:'Brand'
+    },
+    campaign:{
+        type:mongoose.Types.ObjectId,
+        ref:'Campaign'
     },
     email:{
         type:String,
@@ -37,7 +41,7 @@ const transaction = new mongoose.Schema({
     },
     type:{
         type:String,
-        enum:["offering","tithe","devotional_subscription"],
+        enum:["withdrawal","brand_subscription","influencer_subscription","campaign_reward"],
         required:[true,"transaction must have a type"],
     }
 },{timestamps:true})

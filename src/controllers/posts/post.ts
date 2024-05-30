@@ -1,7 +1,13 @@
 const Post = require('../../models/post');
 const mongoose = require('mongoose');
 const { Types } = mongoose;
-const {sendGeneralPushNotification} = require("../../external-apis/expo-push-notification")
+const {
+  sendPushNotification,
+} = require('../../external-apis/fcm_push_notification');
+
+const {
+  sendGeneralPushNotification,
+} = require('../../external-apis/expo-push-notification');
 
 interface Request_body {
   title: string;
@@ -24,7 +30,7 @@ exports.createPost = async (req, res) => {
       link: file.path,
       _id: new mongoose.Types.ObjectId(file.filename),
       type: file.mimetype.split('/')[0],
-      file_extension:file.mimetype.split('/')[1]
+      file_extension: file.mimetype.split('/')[1],
     }));
 
     const newPost = new Post({
@@ -36,10 +42,17 @@ exports.createPost = async (req, res) => {
     });
     const savedPost = await newPost.save();
 
-    await sendGeneralPushNotification({title:"New post", subtitle:title, body:description.slice(0,100)+ " read more..."})
+    // await sendGeneralPushNotification({title:"New post", subtitle:title, body:description.slice(0,100)+ " read more..."})
+    await sendPushNotification({
+      title,
+      subtitle: 'announcement',
+      body: description.slice(0, 100) + ' read more...',
+      // imageUrl: med,
+    });
 
-
-    res.status(201).json({data:savedPost,message:"post created successfully"});
+    res
+      .status(201)
+      .json({ data: savedPost, message: 'post created successfully' });
   } catch (error) {
     console.error('Error creating post:', error);
     res.status(500).json({ error: 'Internal Server Error', errorStack: error });
@@ -49,7 +62,9 @@ exports.createPost = async (req, res) => {
 exports.getAllPosts = async (req, res) => {
   try {
     const posts = await Post.find().populate('author', 'username'); // Assuming 'username' is a field in the Admin model
-    res.status(200).json({data:posts,message:"Posts fetched successfully"});
+    res
+      .status(200)
+      .json({ data: posts, message: 'Posts fetched successfully' });
   } catch (error) {
     console.error('Error getting posts:', error);
     res.status(500).json({ error: 'Internal Server Error' });
@@ -67,7 +82,7 @@ exports.getPostById = async (req, res) => {
       return res.status(404).json({ error: 'Post not found' });
     }
 
-    res.status(200).json({data:post,message:"post fetched by id"});
+    res.status(200).json({ data: post, message: 'post fetched by id' });
   } catch (error) {
     console.error('Error getting post by ID:', error);
     res.status(500).json({ error: 'Internal Server Error' });
@@ -156,7 +171,9 @@ exports.updatePostById = async (req, res) => {
       return res.status(404).json({ error: 'Post not found' });
     }
 
-    res.status(200).json({data:updatedPost,message:"post updated successfully"});
+    res
+      .status(200)
+      .json({ data: updatedPost, message: 'post updated successfully' });
   } catch (error) {
     console.error('Error updating post by ID:', error);
     res.status(500).json({ error: 'Internal Server Error' });
