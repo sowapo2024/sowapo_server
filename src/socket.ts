@@ -29,7 +29,7 @@ const initializeSocket = (server) => {
       const { chatId, pushObject } = message;
       console.log(`New message in chat ${chatId}: `, message);
       io.to(chatId).emit('message', message);
-      if (pushObject&&pushObject.enabled) {
+      if (pushObject.token&&pushObject.enabled) {
         await sendPushNotification({
           registrationTokens: [pushObject?.token],
           title: '💭 New Message',

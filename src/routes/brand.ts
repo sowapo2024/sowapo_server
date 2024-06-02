@@ -2,7 +2,7 @@ const express = require("express");
 const router = express.Router();
 const { brandAuth,verifyOTP } = require("../middlewares/auth");
 const brandController = require("../controllers/brand");
-const pushNotification = require("../external-apis/expo-push-notification")
+const pushNotification = require("../external-apis/push-notification")
 const { singleImage } = require("../middlewares/handleImageMulter");
 
 
@@ -12,8 +12,8 @@ const { singleImage } = require("../middlewares/handleImageMulter");
 // @access  public
 router.post("/register",brandController.register );
 
-// // register push token
-// router.post("/register_push_token",brandAuth,pushNotification.registerToken);
+// register push token
+router.post("/register_push_token",brandAuth,pushNotification.registerToken);
 
 
 

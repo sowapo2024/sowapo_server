@@ -47,7 +47,7 @@ const createMessage = async (req, res) => {
         chat.messages.push(message._id);
         await chat.save();
         console.log("Message created successfully");
-        res.status(201).json({ message: 'Message created successfully' });
+        res.status(201).json({ message: 'Message created successfully',data:message });
       } else {
         console.log("Chat not found");
         res.status(400).json({ message: 'Chat not found' });
@@ -69,7 +69,7 @@ const createMessage = async (req, res) => {
       await Chat.findByIdAndUpdate(chatId, { $push: { messages: message._id } });
 
       console.log("Text message created successfully");
-      res.status(201).json({ message: 'Text message created successfully' });
+      res.status(201).json({ message: 'Text message created successfully',data:message });
     }
   } catch (error) {
     console.error("Message creation failed:", error);

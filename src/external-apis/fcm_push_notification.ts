@@ -1,23 +1,22 @@
-// pushNotificationService.js
-
 const admin = require('firebase-admin');
+const Influencers = require('../models/Influencer');
+const Brand = require('../models/Brand');
+
+require("dotenv").config();
+
 // Parse the JSON string from the environment variable
 const serviceAccount = JSON.parse(process.env.SERVICE_ACCOUNT);
 
-const { getAllPushTokens } = require('./expo-push-notification');
+console.log(serviceAccount)
 
-const Influencers = require('../models/Influencer');
-require("dotenv").config()
 admin.initializeApp({
   credential: admin.credential.cert(serviceAccount),
 });
 
-
-//a delay function for delaying retries.
+// A delay function for delaying retries.
 function delay(duration) {
   return new Promise(resolve => setTimeout(resolve, duration));
 }
-
 
 async function sendPushNotification({
   registrationTokens,
@@ -25,7 +24,8 @@ async function sendPushNotification({
   body,
   imageUrl,
   iconUrl,
-  retryAttempt = 0
+  retryAttempt = 0,
+  maxRetries = 5 // Add a maximum retry limit
 }) {
   const payload = {
     notification: {
@@ -38,27 +38,45 @@ async function sendPushNotification({
     },
   };
 
-  let pushTokens = registrationTokens || await getAllPushTokens();
+  let pushTokens = registrationTokens;
 
   try {
+    if (pushTokens.length === 0) { // Correct the condition
+      throw new Error("You must supply at least one push token");
+    }
+
     const response = await admin.messaging().sendToDevice(pushTokens, payload);
     console.log('Successfully sent message:', response);
 
     const failedTokens = [];
-    response.results.forEach((result, index) => {
+    response.results.forEach(async (result, index) => {
       if (result.error) {
         console.log(`Error for token ${pushTokens[index]}: ${result.error.code}`);
         switch (result.error.code) {
           case 'messaging/invalid-registration-token':
-            console.log("Push token" + pushTokens[index] + "is invalid")
+            console.log("Push token " + pushTokens[index] + " is invalid");
             break;
           case 'messaging/registration-token-not-registered':
             console.log('Disabling push token:', pushTokens[index]);
-            Influencers.findOneAndUpdate(
+            await Influencers.findOneAndUpdate(
               { 'pushObject.token': pushTokens[index] },
               { 'pushObject.enabled': false },
-              { new: true }  // Return the updated document
-            ).exec();
+              { new: true } // Return the updated document
+            ).exec().then(updatedDoc => {
+              console.log(`Updated influencer: ${updatedDoc}`);
+            }).catch(err => {
+              console.error('Error updating influencer:', err);
+            });
+
+            await Brand.findOneAndUpdate(
+              { 'pushObject.token': pushTokens[index] },
+              { 'pushObject.enabled': false },
+              { new: true } // Return the updated document
+            ).exec().then(updatedDoc => {
+              console.log(`Updated influencer: ${updatedDoc}`);
+            }).catch(err => {
+              console.error('Error updating influencer:', err);
+            });
             break;
           case 'messaging/internal-error':
           case 'messaging/server-unavailable':
@@ -70,7 +88,7 @@ async function sendPushNotification({
       }
     });
 
-    if (failedTokens.length > 0) {
+    if (failedTokens.length > 0 && retryAttempt < maxRetries) { // Add a check for maxRetries
       console.log('Failed tokens: ', failedTokens);
       const delayTime = Math.pow(2, retryAttempt) * 1000 + Math.floor(Math.random() * 1000);
       console.log(`Waiting ${delayTime}ms to retry...`);
@@ -82,7 +100,8 @@ async function sendPushNotification({
         body,
         imageUrl,
         iconUrl,
-        retryAttempt: retryAttempt + 1
+        retryAttempt: retryAttempt + 1,
+        maxRetries // Pass maxRetries to the next attempt
       });
     }
 
@@ -92,7 +111,6 @@ async function sendPushNotification({
     throw error;
   }
 }
-
 
 module.exports = {
   sendPushNotification,

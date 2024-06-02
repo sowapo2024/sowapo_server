@@ -1,4 +1,4 @@
-const {sendGeneralPushNotification} = require("../../external-apis/expo-push-notification")
+const {sendGeneralPushNotification} = require("../../external-apis/push-notification")
 
 const Announcements = require('../../models/announcement'); // Replace 'yourAnnouncementModel' with the actual file path of your model
 

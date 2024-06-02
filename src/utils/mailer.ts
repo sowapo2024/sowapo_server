@@ -59,7 +59,7 @@ const sendVerification = async ({
     'utf-8',
     { username: username, OTP },
   );
-  await sender({ html: html_body, to: email, subject: 'Calvary greetings' });
+  await sender({ html: html_body, to: email, subject: 'Email Verification' });
 };
 
 const sendResetPasswordEmail = async ({

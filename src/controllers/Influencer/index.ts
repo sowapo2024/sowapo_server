@@ -157,6 +157,7 @@ exports.login = async (req, res) => {
           isSuspended: influencer.isSuspended,
           email: influencer.email,
           subscription: influencer.subscription,
+          accountType:influencer.accountType
         },
         jwtSecret,
         { expiresIn: '3d' },
@@ -339,7 +340,7 @@ exports.editInfluencer = async (req, res) => {
 
     // Update the user
     const updatedUserResult = await Influencer.findByIdAndUpdate(
-      req.Influencer.id,
+      req.user.id,
       updatedUser,
       {
         new: true,
@@ -361,7 +362,7 @@ exports.filterInfluencers = async (req, res) => {
   try {
     let { sort, ...query } = req.query;
 
-    console.log(req.query," filter query")
+    console.log(query," filter query")
 
     // Sorting Result
 

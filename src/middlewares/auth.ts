@@ -139,6 +139,7 @@ const adminAuth = (req, res, next) => {
   // verifyOTP middleware
   const verifyOTP = async (req, res,next) => {
     const { email, otp } = req.body;
+    console.log(req.body, " otp body")
 
     if (!email || !otp) {
         return res.status(400).json({ message: 'Email and OTP are required.' });

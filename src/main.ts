@@ -6,6 +6,8 @@ const cors = require("cors");
 require("dotenv").config();
 const bodyParser = require("body-parser");
 const cron = require('node-cron');
+const {sendPushNotification} = require("./external-apis/fcm_push_notification")
+const {getAllPushTokens}  = require("./external-apis/push-notification")
 const initializeSocket = require("./socket");
 
 // initializing routes 
@@ -109,6 +111,24 @@ app.use((error, req, res, next) => {
 //   scheduled: true,
 //   timezone: "Africa/Lagos"
 // });
+
+// test notification
+
+
+
+async function testNotification (){
+  try {
+    const tokens = await getAllPushTokens()
+ await sendPushNotification({registrationTokens:tokens,title:"test  notification",body:"this is a test body"});
+    console.log("token sent",tokens)
+  } catch (error) {
+    console.log(error)
+  }
+
+ 
+}
+
+testNotification()
 
 // Declare port and listen to server events
 const PORT = process.env.PORT || 4000;

@@ -7,7 +7,7 @@ const {
 
 const {
   sendGeneralPushNotification,
-} = require('../../external-apis/expo-push-notification');
+} = require('../../external-apis/push-notification');
 
 interface Request_body {
   name: string;

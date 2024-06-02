@@ -143,6 +143,7 @@ exports.login = async (req, res) => {
           isSuspended: brand.isSuspended,
           email: brand.email,
           subscription: brand.subscription,
+          accountType:brand.accountType,
         },
         jwtSecret,
         { expiresIn: '3d' },

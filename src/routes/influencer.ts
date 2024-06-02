@@ -2,7 +2,7 @@ const express = require("express");
 const router = express.Router();
 const { auth,verifyOTP } = require("../middlewares/auth");
 const InfluencerController = require("../controllers/Influencer");
-const pushNotification = require("../external-apis/expo-push-notification")
+const pushNotification = require("../external-apis/push-notification")
 const { singleImage, multipleImages,singleMulterImageHandler } = require("../middlewares/handleImageMulter");
 
 
@@ -13,7 +13,7 @@ const { singleImage, multipleImages,singleMulterImageHandler } = require("../mid
 router.post("/register",InfluencerController.register );
 
 // // register push token
-// router.post("/register_push_token",auth,pushNotification.registerToken);
+router.post("/register_push_token",auth,pushNotification.registerToken);
 
 
 
