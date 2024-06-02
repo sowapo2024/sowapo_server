@@ -1,6 +1,6 @@
 const admin = require('firebase-admin');
 const Influencers = require('../models/Influencer');
-const Brand = require('../models/Brand');
+const Brand = require('../models/brand');
 
 require("dotenv").config();
 
