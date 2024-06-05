@@ -19,7 +19,7 @@ router.put(
   feedbackController.markFeedbackAsSeen
 );
 
-router.get("/",feedbackController.getAllFeedbacks)
+router.get("/",adminAuth,feedbackController.getAllFeedbacks)
 
 
 

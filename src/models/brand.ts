@@ -89,7 +89,7 @@ const brandSchema = new Schema({
     type: String,
     default: 'Brand',
   },
-});
+},{timestamps:true});
 
 
 

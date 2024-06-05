@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const {brandAuth} = require("../middlewares/auth")
+const { brandAuth, adminAuth } = require('../middlewares/auth');
 const {
   singleImage,
   allMediaTypes,
@@ -12,18 +12,21 @@ const {
   getAllCampaigns,
   getCampaignById,
   verifyPayment,
+  suspendCampaign,
+  reactivateCampaign,
+  approveCampaign,
   getCampaignsByBrandId,
   filterCampaigns,
   updateCampaignById,
   deleteCampaignById,
-  deleteMediaFromCampaign
+  deleteMediaFromCampaign,
 } = require('../controllers/campaign/index');
 
 // Route to create a new campaign
-router.post('/create', brandAuth,allMediaTypes, createCampaign);
+router.post('/create', brandAuth, allMediaTypes, createCampaign);
 
 // Route to get all campaigns
-router.get('/get', getAllCampaigns);
+router.get('/get', adminAuth, getAllCampaigns);
 
 // Route to get a single campaign by ID
 router.get('/get/:campaignId', getCampaignById);
@@ -38,12 +41,25 @@ router.get('/brand/:brandId', getCampaignsByBrandId);
 router.get('/filter', filterCampaigns);
 
 // Route to update a specific campaign by ID
-router.post('/update/:campaignId', brandAuth,updateCampaignById);
+router.post('/update/:campaignId', brandAuth, updateCampaignById);
 
 // Route to delete a specific campaign by ID
-router.delete('/:campaignId',brandAuth, deleteCampaignById);
+router.delete('/:campaignId', brandAuth, deleteCampaignById);
 
 // Route to delete a specific media from a campaign
-router.delete('/:campaignId/media/:mediaId',brandAuth, deleteMediaFromCampaign);
+router.delete(
+  '/:campaignId/media/:mediaId',
+  brandAuth,
+  deleteMediaFromCampaign,
+);
+
+// Route to suspend a campaign
+router.put('/suspend/:campaignId', adminAuth, suspendCampaign);
+
+// Route to reactivate a campaign
+router.put('/activate/:campaignId', adminAuth, reactivateCampaign);
+
+// Route to approve a campaign
+router.put('/approve/:campaignId', adminAuth, approveCampaign);
 
 module.exports = router;

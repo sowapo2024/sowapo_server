@@ -58,7 +58,7 @@ exports.createCampaign = async (req, res) => {
 
 exports.getAllCampaigns = async (req, res) => {
   try {
-    const Campaigns = await Campaign.find(); // Assuming 'username' is a field in the Admin model
+    const Campaigns = await Campaign.find().populate('brand'); // Assuming 'username' is a field in the Admin model
     res
       .status(200)
       .json({ data: Campaigns, message: 'Campaigns fetched successfully' });
@@ -73,7 +73,9 @@ exports.getCampaignById = async (req, res) => {
   const { campaignId } = req.params;
 
   try {
-    const campaign = await Campaign.findById(campaignId);
+    const campaign = await Campaign.findById(campaignId)
+      .populate('brand')
+      .populate('hires.inflencer');
 
     if (!campaign) {
       return res.status(404).json({ error: 'Campaign not found' });
@@ -247,8 +249,7 @@ exports.filterCampaigns = async (req, res) => {
 // update Campaign
 exports.updateCampaignById = async (req, res) => {
   const { campaignId } = req.params;
-  console.log(req.body)
-
+  console.log(req.body);
 
   try {
     // Check if campaignId is a valid ObjectId
@@ -299,6 +300,66 @@ exports.updateCampaignById = async (req, res) => {
   } catch (error) {
     console.error('Error updating Campaign by ID:', error);
     res.status(500).json({ error: 'Internal Server Error' });
+  }
+};
+exports.approveCampaign = async (req, res) => {
+  try {
+    const { campaignId } = req.params;
+
+    const campaign = await Campaign.findByIdAndUpdate(
+      campaignId,
+      { isApproved: true, status: 'active' }, // Optionally, you can change the status to 'active' when approved
+      { new: true },
+    );
+
+    if (!campaign) {
+      return res.status(404).json({ message: 'Campaign not found' });
+    }
+
+    res.status(200).json({ message: 'Campaign approved', campaign });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+
+exports.suspendCampaign = async (req, res) => {
+  try {
+    const { campaignId } = req.params;
+
+    const campaign = await Campaign.findByIdAndUpdate(
+      campaignId,
+      { isSuspended: true, status: 'pending' }, // Optionally, you can change the status to 'pending' when suspended
+      { new: true }
+    );
+
+    if (!campaign) {
+      return res.status(404).json({ message: 'Campaign not found' });
+    }
+
+    res.status(200).json({ message: 'Campaign suspended', campaign });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+exports.reactivateCampaign = async (req, res) => {
+  try {
+    const { campaignId } = req.params;
+
+    const campaign = await Campaign.findByIdAndUpdate(
+      campaignId,
+      { isSuspended: false, status: 'active' }, // Optionally, you can change the status to 'active' when reactivated
+      { new: true },
+    );
+
+    if (!campaign) {
+      return res.status(404).json({ message: 'Campaign not found' });
+    }
+
+    res.status(200).json({ message: 'Campaign reactivated', campaign });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
   }
 };
 
