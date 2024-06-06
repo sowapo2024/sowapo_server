@@ -1,13 +1,10 @@
 const admin = require('firebase-admin');
 const Influencers = require('../models/Influencer');
 const Brand = require('../models/brand');
-
 require("dotenv").config();
 
 // Parse the JSON string from the environment variable
 const serviceAccount = JSON.parse(process.env.SERVICE_ACCOUNT);
-
-console.log(serviceAccount)
 
 admin.initializeApp({
   credential: admin.credential.cert(serviceAccount),
@@ -16,6 +13,34 @@ admin.initializeApp({
 // A delay function for delaying retries.
 function delay(duration) {
   return new Promise(resolve => setTimeout(resolve, duration));
+}
+
+async function updatePushTokenStatus(pushToken) {
+  try {
+    const influencerUpdate = Influencers.findOneAndUpdate(
+      { 'pushObject.token': pushToken },
+      { 'pushObject.enabled': false },
+      { new: true }
+    ).exec();
+
+    const brandUpdate = Brand.findOneAndUpdate(
+      { 'pushObject.token': pushToken },
+      { 'pushObject.enabled': false },
+      { new: true }
+    ).exec();
+
+    const [updatedInfluencer, updatedBrand] = await Promise.all([influencerUpdate, brandUpdate]);
+
+    if (updatedInfluencer) {
+      console.log(`Updated influencer: ${updatedInfluencer}`);
+    }
+
+    if (updatedBrand) {
+      console.log(`Updated brand: ${updatedBrand}`);
+    }
+  } catch (err) {
+    console.error('Error updating push token status:', err);
+  }
 }
 
 async function sendPushNotification({
@@ -36,20 +61,21 @@ async function sendPushNotification({
       imageUrl: imageUrl || '',
       iconUrl: iconUrl || '',
     },
+    tokens: registrationTokens
   };
 
   let pushTokens = registrationTokens;
 
   try {
-    if (pushTokens.length === 0) { // Correct the condition
+    if (pushTokens.length === 0) {
       throw new Error("You must supply at least one push token");
     }
 
-    const response = await admin.messaging().sendToDevice(pushTokens, payload);
+    const response = await admin.messaging().sendEachForMulticast(payload);
     console.log('Successfully sent message:', response);
 
     const failedTokens = [];
-    response.results.forEach(async (result, index) => {
+    response.responses.forEach(async (result, index) => {
       if (result.error) {
         console.log(`Error for token ${pushTokens[index]}: ${result.error.code}`);
         switch (result.error.code) {
@@ -58,25 +84,7 @@ async function sendPushNotification({
             break;
           case 'messaging/registration-token-not-registered':
             console.log('Disabling push token:', pushTokens[index]);
-            await Influencers.findOneAndUpdate(
-              { 'pushObject.token': pushTokens[index] },
-              { 'pushObject.enabled': false },
-              { new: true } // Return the updated document
-            ).exec().then(updatedDoc => {
-              console.log(`Updated influencer: ${updatedDoc}`);
-            }).catch(err => {
-              console.error('Error updating influencer:', err);
-            });
-
-            await Brand.findOneAndUpdate(
-              { 'pushObject.token': pushTokens[index] },
-              { 'pushObject.enabled': false },
-              { new: true } // Return the updated document
-            ).exec().then(updatedDoc => {
-              console.log(`Updated influencer: ${updatedDoc}`);
-            }).catch(err => {
-              console.error('Error updating influencer:', err);
-            });
+            await updatePushTokenStatus(pushTokens[index]);
             break;
           case 'messaging/internal-error':
           case 'messaging/server-unavailable':
@@ -88,7 +96,7 @@ async function sendPushNotification({
       }
     });
 
-    if (failedTokens.length > 0 && retryAttempt < maxRetries) { // Add a check for maxRetries
+    if (failedTokens.length > 0 && retryAttempt < maxRetries) {
       console.log('Failed tokens: ', failedTokens);
       const delayTime = Math.pow(2, retryAttempt) * 1000 + Math.floor(Math.random() * 1000);
       console.log(`Waiting ${delayTime}ms to retry...`);
@@ -101,7 +109,7 @@ async function sendPushNotification({
         imageUrl,
         iconUrl,
         retryAttempt: retryAttempt + 1,
-        maxRetries // Pass maxRetries to the next attempt
+        maxRetries
       });
     }
 
