@@ -251,7 +251,16 @@ exports.getInfluencerCampaignHistory = async (req, res) => {
     // Find the influencer by ID and populate the campaign history
     const influencer = await Influencer.findById(id).populate({
       path: 'campaignHistory.campaign', // Path to the campaigns in the campaignHistory array
-      populate: { path: 'brand' }, // Further populate the brand details in each campaign
+      populate: [
+        { path: 'brand' }, // Further populate the brand details in each campaign
+        { 
+          path: 'hires',
+          populate: { path: 'influencer' }
+        },
+        {path:"proposals",
+          populate: [{ path: 'campaign',populate: { path: 'brand' } },{path:"tasks"}]
+        }
+      ]
     });
 
     if (!influencer) {
@@ -266,11 +275,10 @@ exports.getInfluencerCampaignHistory = async (req, res) => {
     });
   } catch (error) {
     console.error('Error fetching campaign history:', error);
-    res
-      .status(500)
-      .json({ error: 'Internal Server Error', message: error.message });
+    res.status(500).json({ error: 'Internal Server Error', message: error.message });
   }
 };
+
 
 // get all users"
 exports.getInfluencers = (req, res) => {
@@ -360,41 +368,82 @@ exports.editInfluencer = async (req, res) => {
 
 exports.filterInfluencers = async (req, res) => {
   try {
-    let { sort, ...query } = req.query;
+    let {
+      sort,
+      q,
+      minRating,
+      maxRating,
+      interests,
+      firstName,
+      lastName,
+      username,
+      ...query
+    } = req.query;
 
-    console.log(query," filter query")
+    console.log(req.query, "filter query");
+
+    // Construct the text search condition
+    if (q) {
+      query.$text = { $search: q };
+    }
+
+    // Rating filter
+    if (minRating || maxRating) {
+      query.rating = {};
+      if (minRating) {
+        query.rating.$gte = parseFloat(minRating);
+      }
+      if (maxRating) {
+        query.rating.$lte = parseFloat(maxRating);
+      }
+    }
+
+    // Interests filter
+    if (interests) {
+      query.interests = { $in: interests.split(',') };
+    }
+
+    // First name filter
+    if (firstName) {
+      query.firstName = { $regex: firstName, $options: 'i' };
+    }
+
+    // Last name filter
+    if (lastName) {
+      query.lastName = { $regex: lastName, $options: 'i' };
+    }
+
+    // Username filter
+    if (username) {
+      query.username = { $regex: username, $options: 'i' };
+    }
 
     // Sorting Result
-
-    let sortList: [] | {};
+    let sortList = { createdAt: -1 }; // Default sort by createdAt descending
     if (sort) {
-      sortList = sort.split(',').map((s) => {
+      sortList = sort.split(',').reduce((acc, s) => {
         const [field, order] = s.split(':');
-        console.log(field, order);
-        return [field, order === 'desc' ? -1 : 1];
-      });
+        acc[field] = order === 'desc' ? -1 : 1;
+        return acc;
+      }, {});
+      console.log("filter Sortlist", sortList);
+    }
 
-      console.log("filter Sortlist",sortList)
-    } else {
-      sortList = { createdAt: -1 };
+    query.isSuspended = false;
+
+    const influencers = await Influencer.find(query).sort(sortList).exec();
+
+    if (!influencers || influencers.length === 0) {
+      return res.status(400).json({ data: influencers, message: 'No item matches your search' });
     }
-    query.isSuspended = false
-    const influencers = await Influencer.find(query).sort(sortList);
-    if (influencers.length <= 0) {
-      return res
-        .status(400)
-        .json({ data: influencers, message: 'No item match your search' });
-    }
-    return res
-      .status(200)
-      .json({ data: influencers, message: 'fetched influencers sucesfully' });
+
+    return res.status(200).json({ data: influencers, message: 'Fetched influencers successfully' });
   } catch (error) {
     console.log(error);
-    return res
-      .status(500)
-      .json({ error: error, message: 'something went wrong' });
+    return res.status(500).json({ error: error.message || 'Something went wrong' });
   }
 };
+
 
 //upload avatar
 exports.createAvatar = async (req, res) => {

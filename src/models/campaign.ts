@@ -41,7 +41,7 @@ const AdCampaignSchema = new Schema(
       default: false,
     },
 
-    // the brand sposoring the campaign
+    // the brand sponsoring the campaign
     brand: {
       type: Schema.Types.ObjectId,
       ref: 'Brand',
@@ -57,15 +57,42 @@ const AdCampaignSchema = new Schema(
         required: true,
       },
     },
+
+    // the proposed total budget for the campaign
     totalBudget: {
       type: Number,
       required: true,
+    },
+
+    // The available budget at any moment
+    availableBalance: {
+      type: Number,
+      // required: true,
+    },
+
+    // 
+    expenditure: {
+      type: Number,
+      // required: true,
     },
 
     paymentVerified: {
       type: Boolean,
       default: false,
     },
+
+
+    // boolean field that indiates whether brand is still hiring or not
+    // if this field is true, the camapaign will be public and accepting proposals 
+    hiring:{
+      type: Boolean,
+      default: true,
+    },
+    // // max hires
+    // maxHires:{
+    //   type:Number,
+    //   default:1
+    // },
 
     //   proposlas from the inflencers
     proposals: [{ type: Schema.Types.ObjectId, ref: 'Proposal' }],
@@ -89,10 +116,11 @@ const AdCampaignSchema = new Schema(
         default: 'all',
       },
     },
+
     // hires
     hires: [
       {
-        inflencer: { type: Schema.Types.ObjectId, ref: 'Influencer' },
+        influencer: { type: Schema.Types.ObjectId, ref: 'Influencer' },
         status: {
           type: String,
           enum: ['hired', 'pending', 'revoked'],

@@ -19,10 +19,24 @@ const ProposalSchema = new Schema(
     },
     title: {
       type: String,
+      required: true,
     },
     coverLetter: {
       type: String,
+      required: true,
     },
+    paymentMode: {
+      type: String,
+      enum: ['onCompletion', 'task_based'],
+      required: true,
+      default: 'onCompletion',
+    },
+    tasks: [
+      {
+        type: Schema.Types.ObjectId,
+        ref: 'Task',
+      },
+    ],
     status: {
       type: String,
       enum: ['submitted', 'accepted', 'rejected', 'ignored'],

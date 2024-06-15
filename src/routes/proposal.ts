@@ -30,7 +30,7 @@ router.get("/get",adminAuth,getAllProposals)
 router.get("/influencer/:id",auth,getInfluencerProposals)
 
 // get campaign proposals
-router.get("/campaign/:id",auth,getCampaignProposals)
+router.get("/campaign/:id",brandAuth,getCampaignProposals)
 
 // Route to update an existing proposal
 router.put('/:id', auth, updateProposal);

@@ -153,5 +153,8 @@ const InfluencerSchema = new Schema(
   { timestamps: true },
 );
 
+// Create text index for full-text search
+InfluencerSchema.index({ firstName: 'text',lastName: 'text', userName: 'text', interests: 'text' });
+
 const Inflencer = mongoose.model('Influencer', InfluencerSchema);
 module.exports = Inflencer;

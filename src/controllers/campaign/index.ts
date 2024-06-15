@@ -6,15 +6,10 @@ const {
 } = require('../../external-apis/fcm_push_notification');
 
 const {
-  sendGeneralPushNotification,
-} = require('../../external-apis/push-notification');
+  sendCampaignApproval,
+  sendCampaignSuspended,
+} = require('../../utils/mailer');
 
-interface Request_body {
-  name: string;
-  author: string;
-  description: string;
-  audience: string;
-}
 
 interface Media {
   link: string;
@@ -102,12 +97,9 @@ exports.getCampaignsByBrandId = async (req, res) => {
 
   try {
     const campaigns = await Campaign.find({ brand: brandId })
-      .populate('brand')
-      .populate({
-        path: 'proposals',
-        populate: { path: 'proposal' },
-      })
-      .populate({
+      ?.populate('brand')
+      ?.populate('proposals')
+      ?.populate({
         path: 'hires',
         populate: { path: 'influencer' },
       });
@@ -126,46 +118,6 @@ exports.getCampaignsByBrandId = async (req, res) => {
 };
 
 // filter Campaigns
-
-// exports.filterCampaigns = async (req, res) => {
-//   try {
-//     let { sort, ...query } = req.query;
-
-//     console.log(req.query," filter query")
-
-//     // Sorting Result
-
-//     let sortList: [] | {};
-//     if (sort) {
-//       sortList = sort.split(',').map((s) => {
-//         const [field, order] = s.split(':');
-//         console.log(field, order);
-//         return [field, order === 'desc' ? -1 : 1];
-//       });
-
-//       console.log("filter Sortlist",sortList)
-//     } else {
-//       sortList = { createdAt: -1 };
-//     }
-
-//     query.isApproved = true
-//     query.isSuspended = false
-//     const campaigns = await Campaign.find(query).sort(sortList).populate('brand');
-//     if (campaigns.length <= 0) {
-//       return res
-//         .status(400)
-//         .json({ data: campaigns, message: 'No item match your search' });
-//     }
-//     return res
-//       .status(200)
-//       .json({ data: campaigns, message: 'fetched Campaigns sucesfully' });
-//   } catch (error) {
-//     console.log(error);
-//     return res
-//       .status(500)
-//       .json({ error: error, message: 'something went wrong' });
-//   }
-// };
 
 exports.filterCampaigns = async (req, res) => {
   try {
@@ -191,28 +143,38 @@ exports.filterCampaigns = async (req, res) => {
     // Proposal counts filter
     if (minProposals || maxProposals) {
       query['proposals.length'] = {};
-      if (minProposals)
+      if (minProposals) {
         query['proposals.length'].$gte = parseInt(minProposals, 10);
-      if (maxProposals)
+      }
+      if (maxProposals) {
         query['proposals.length'].$lte = parseInt(maxProposals, 10);
+      }
     }
 
     // Budget filter
     if (minBudget || maxBudget) {
       query['budget.amount'] = {};
-      if (minBudget) query['budget.amount'].$gte = parseInt(minBudget, 10);
-      if (maxBudget) query['budget.amount'].$lte = parseInt(maxBudget, 10);
+      if (minBudget) {
+        query['budget.amount'].$gte = parseInt(minBudget, 10);
+      }
+      if (maxBudget) {
+        query['budget.amount'].$lte = parseInt(maxBudget, 10);
+      }
     }
 
     // Date filter
     if (startDate || endDate) {
       query.startDate = {};
-      if (startDate) query.startDate.$gte = new Date(startDate);
-      if (endDate) query.startDate.$lte = new Date(endDate);
+      if (startDate) {
+        query.startDate.$gte = new Date(startDate);
+      }
+      if (endDate) {
+        query.startDate.$lte = new Date(endDate);
+      }
     }
 
     // Sorting Result
-    let sortList;
+    let sortList = { createdAt: -1 }; // Default sort by createdAt descending
     if (sort) {
       sortList = sort.split(',').reduce((acc, s) => {
         const [field, order] = s.split(':');
@@ -220,36 +182,37 @@ exports.filterCampaigns = async (req, res) => {
         return acc;
       }, {});
       console.log('filter Sortlist', sortList);
-    } else {
-      sortList = { createdAt: -1 };
     }
 
     query.isApproved = true;
     query.isSuspended = false;
 
     const campaigns = await Campaign.find(query)
+      .populate('brand')
+      .populate('proposals')
+      .populate({
+        path: 'hires',
+        populate: { path: 'influencer' },
+      })
       .sort(sortList)
-      .populate('brand');
-    if (campaigns.length <= 0) {
-      return res
-        .status(400)
-        .json({ data: campaigns, message: 'No item match your search' });
+      .exec();
+
+    if (!campaigns || campaigns.length === 0) {
+      return res.status(400).json({ data: campaigns, message: 'No item matches your search' });
     }
-    return res
-      .status(200)
-      .json({ data: campaigns, message: 'Fetched campaigns successfully' });
+
+    return res.status(200).json({ data: campaigns, message: 'Fetched campaigns successfully' });
   } catch (error) {
     console.log(error);
-    return res
-      .status(500)
-      .json({ error: error, message: 'Something went wrong' });
+    return res.status(500).json({ error: error.message || 'Something went wrong' });
   }
 };
+
 
 // update Campaign
 exports.updateCampaignById = async (req, res) => {
   const { campaignId } = req.params;
-  console.log(req.body);
+  console.log(req.bod,"update campaign request body");
 
   try {
     // Check if campaignId is a valid ObjectId
@@ -308,13 +271,20 @@ exports.approveCampaign = async (req, res) => {
 
     const campaign = await Campaign.findByIdAndUpdate(
       campaignId,
-      { isApproved: true, status: 'active' }, // Optionally, you can change the status to 'active' when approved
+      { isApproved: true, status: 'active', isSuspended: false }, // Optionally, you can change the status to 'active' when approved
       { new: true },
-    );
+    )
+      ?.populate('brand')
+      .exec();
 
     if (!campaign) {
       return res.status(404).json({ message: 'Campaign not found' });
     }
+
+    await sendCampaignApproval({
+      email: campaign?.brand?.email,
+      title: campaign?.title,
+    });
 
     res.status(200).json({ message: 'Campaign approved', campaign });
   } catch (error) {
@@ -322,21 +292,26 @@ exports.approveCampaign = async (req, res) => {
   }
 };
 
-
 exports.suspendCampaign = async (req, res) => {
   try {
     const { campaignId } = req.params;
 
     const campaign = await Campaign.findByIdAndUpdate(
       campaignId,
-      { isSuspended: true, status: 'pending' }, // Optionally, you can change the status to 'pending' when suspended
-      { new: true }
-    );
+      { isSuspended: true, status: 'pending', isApproved: false }, // Optionally, you can change the status to 'pending' when suspended
+      { new: true },
+    )
+      ?.populate('brand')
+      .exec();
 
     if (!campaign) {
       return res.status(404).json({ message: 'Campaign not found' });
     }
 
+    await sendCampaignSuspended({
+      email: campaign?.brand?.email,
+      title: campaign?.title,
+    });
     res.status(200).json({ message: 'Campaign suspended', campaign });
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -349,7 +324,7 @@ exports.reactivateCampaign = async (req, res) => {
 
     const campaign = await Campaign.findByIdAndUpdate(
       campaignId,
-      { isSuspended: false, status: 'active' }, // Optionally, you can change the status to 'active' when reactivated
+      { isSuspended: false, status: 'active', isApproved: 'true' }, // Optionally, you can change the status to 'active' when reactivated
       { new: true },
     );
 
@@ -358,6 +333,26 @@ exports.reactivateCampaign = async (req, res) => {
     }
 
     res.status(200).json({ message: 'Campaign reactivated', campaign });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+exports.markCampaignAsCompleted = async (req, res) => {
+  try {
+    const { campaignId } = req.params;
+
+    const campaign = await Campaign.findByIdAndUpdate(
+      campaignId,
+      { status: 'completed'}, 
+      { new: true },
+    );
+
+    if (!campaign) {
+      return res.status(404).json({ message: 'Campaign not found' });
+    }
+
+    res.status(200).json({ message: 'Campaign marked as complete', campaign });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }

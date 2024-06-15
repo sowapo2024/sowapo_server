@@ -25,18 +25,16 @@ interface MailObject {
 // async..await is not allowed in global scope, must use a wrapper
 async function sender(mailObject: MailObject) {
 
-  console.log(mailObject,"mail Object")
   try {
     // send mail with defined transport object
     const info = await transporter.sendMail({
-      from: mailObject.from || ' The Agape Church <agape@agapeministies.com>', // sender address
+      from: mailObject.from || ' SOWAPO app <info@sowapo.com>', // sender address
       to: mailObject.to, // list of receivers
       subject: mailObject.subject || 'Notification', // Subject line
       text: mailObject.text, // plain text body
       html: mailObject.html, // html body
       attachments: mailObject.attachments,
     });
-    console.log('Message sent: %s', info.messageId);
   } catch (error) {
     console.log('transporter error', error);
     throw new Error('Something went wrong');
@@ -79,65 +77,92 @@ const sendResetPasswordEmail = async ({
   await sender({ html: html_body, to: email, subject: 'Forgot password OTP' });
 };
 
-// send Donation Reciept
-const sendDonationReciept = async ({
-  email,
-  amount,
-}: {
-  email: string;
-  amount: string;
-}) => {
-
-  try {
-      const html_body: string = await convertHTML(
-    './src/utils/mail_templates/sendDonationReciept.html',
-    'utf-8',
-    { amount },
-  );
-
-  console.log(html_body,"coverted html string")
-  await sender({ html: html_body, to: email, subject: 'Donation Recieved' });
-  } catch (error) {
-    console.log("mailing error :",error)
-    throw new Error("error occured while sending mail")
-  }
-
-};
 
 // book reciept mail
-const sendBookReciept = async ({
+const sendCampaignApproval = async ({
   email,
-  amount,
-  attachments,
+  title,
 }: {
   email: string;
-  amount: string;
-  attachments: {}[];
+  title:string
 }) => {
   try {
       const html_body: string = await convertHTML(
-    './src/utils/mail_templates/sendVerification.html',
+    './src/utils/mail_templates/sendCampaignApproval.html',
     'utf-8',
-    { amount },
+    { title },
   );
   await sender({
     html: html_body,
     to: email,
-    subject: 'Transaction successful',
-    attachments: attachments,
+    subject: 'Campaign Approved',
   });
   } catch (error) {
 
     console.log("mailing error :",error)
-    throw new Error("error occured while sending mail")
+    throw new Error("error occured while sending campaign verification mail")
   }
 
 };
 
+const sendCampaignSuspended = async ({
+  email,
+  title,
+}: {
+  email: string;
+  title:string
+}) => {
+  try {
+      const html_body: string = await convertHTML(
+    './src/utils/mail_templates/sendCampaignSuspended.html',
+    'utf-8',
+    { title },
+  );
+  await sender({
+    html: html_body,
+    to: email,
+    subject: 'Campaign Suspended',
+  });
+  } catch (error) {
+
+    console.log("mailing error :",error)
+    throw new Error("error occured while sending campaign supended mail")
+  }
+
+};
+
+const sendAcceptProposal = async ({
+  email,
+  title,
+}: {
+  email: string;
+  title:string
+}) => {
+  try {
+      const html_body: string = await convertHTML(
+    './src/utils/mail_templates/sendAcceptProposal.html',
+    'utf-8',
+    { title },
+  );
+  await sender({
+    html: html_body,
+    to: email,
+    subject: 'You are hired!!',
+  });
+  } catch (error) {
+
+    console.log("mailing error :",error)
+    throw new Error("error occured while sending campaign supended mail")
+  }
+
+};
+
+
 module.exports = {
   sender,
-  sendBookReciept,
+  sendCampaignApproval,
   sendVerification,
-  sendDonationReciept,
-  sendResetPasswordEmail
+  sendResetPasswordEmail,
+  sendCampaignSuspended,
+  sendAcceptProposal
 };

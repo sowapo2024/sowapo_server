@@ -13,6 +13,7 @@ const {
   getCampaignById,
   verifyPayment,
   suspendCampaign,
+  markCampaignAsCompleted,
   reactivateCampaign,
   approveCampaign,
   getCampaignsByBrandId,
@@ -21,6 +22,8 @@ const {
   deleteCampaignById,
   deleteMediaFromCampaign,
 } = require('../controllers/campaign/index');
+
+const proposalControllers = require("../controllers/proposal/index")
 
 // Route to create a new campaign
 router.post('/create', brandAuth, allMediaTypes, createCampaign);
@@ -41,7 +44,7 @@ router.get('/brand/:brandId', getCampaignsByBrandId);
 router.get('/filter', filterCampaigns);
 
 // Route to update a specific campaign by ID
-router.post('/update/:campaignId', brandAuth, updateCampaignById);
+router.post('/update/:campaignId', brandAuth, allMediaTypes, updateCampaignById);
 
 // Route to delete a specific campaign by ID
 router.delete('/:campaignId', brandAuth, deleteCampaignById);
@@ -56,8 +59,16 @@ router.delete(
 // Route to suspend a campaign
 router.put('/suspend/:campaignId', adminAuth, suspendCampaign);
 
+router.put('/unhire/:influencerId/:campaignId', brandAuth, proposalControllers.removeHire);
+
+
 // Route to reactivate a campaign
 router.put('/activate/:campaignId', adminAuth, reactivateCampaign);
+
+// mark campaign as complete
+
+router.put('/complete/:campaignId', brandAuth, markCampaignAsCompleted);
+
 
 // Route to approve a campaign
 router.put('/approve/:campaignId', adminAuth, approveCampaign);

@@ -1,34 +1,29 @@
 const OTP = require('../../models/otp');
 const otpGenerator = require('otp-generator');
 
-exports.generateOTP = async (email: string): Promise<string> => {
-  let otp: string;
+exports.generateOTP = async (email) => {
+  let otp;
 
-  otp = otpGenerator.generate(6, {
-    upperCaseAlphabets: false,
-    specialChars: false,
-    lowerCaseAlphabets: false,
-  });
-
-  let otpExists = await OTP.findOne({ otp });
-
-  // Loop until a unique OTP is generated
-  while (otpExists) {
+  // Generate a unique 6-digit OTP
+  do {
     otp = otpGenerator.generate(6, {
       upperCaseAlphabets: false,
       specialChars: false,
       lowerCaseAlphabets: false,
     });
-    otpExists = await OTP.findOne({ otp });
-  }
-  const newOTP = await OTP.create({
+  } while (await OTP.findOne({ otp }));
+
+  const expires = Date.now() + 10 * 60 * 1000; // OTP expires in 10 minutes
+
+  const newOTP = new OTP({
     otp,
     email,
+    expires,
   });
 
-  newOTP.save(newOTP);
+  await newOTP.save();
 
-  console.log(`new otp is ${newOTP}`);
+  console.log(`New OTP is ${otp}`);
   return otp;
 };
 
@@ -40,26 +35,20 @@ exports.verifyOTP = async (req, res, next) => {
   }
 
   try {
-    const otpDocument = await OTP.findOne({ email: email, otp: otp });
+    const otpDocument = await OTP.findOne({ email, otp });
+
     if (!otpDocument) {
-      return res
-        .status(404)
-        .json({ message: 'OTP is incorrect or does not exist.' });
+      return res.status(404).json({ message: 'OTP is incorrect or does not exist.' });
     }
 
-    // Check if the OTP has expired
     const currentTime = Date.now();
     if (currentTime > otpDocument.expires) {
-      // Optionally, delete the expired OTP document here
-      // await otpDocument.remove();
+      await OTP.deleteOne({ _id: otpDocument._id }); // Optionally, delete the expired OTP
       return res.status(410).json({ message: 'OTP has expired.' });
     }
 
-    // OTP is correct and has not expired
-    // Here, you can proceed with the user verification process
-
-    // Optionally, delete the OTP document after successful verification
-    await otpDocument.remove();
+    // Proceed with user verification process here
+    await OTP.deleteOne({ _id: otpDocument._id }); // Optionally, delete the OTP after successful verification
 
     next();
   } catch (error) {
