@@ -98,7 +98,9 @@ exports.getCampaignsByBrandId = async (req, res) => {
   try {
     const campaigns = await Campaign.find({ brand: brandId })
       ?.populate('brand')
-      ?.populate('proposals')
+      ?.populate({path:"proposals",
+        populate: [{ path: 'campaign',populate: { path: 'brand' } },{path:"tasks"}]
+      })
       ?.populate({
         path: 'hires',
         populate: { path: 'influencer' },
@@ -189,7 +191,9 @@ exports.filterCampaigns = async (req, res) => {
 
     const campaigns = await Campaign.find(query)
       .populate('brand')
-      .populate('proposals')
+      .populate({path:"proposals",
+        populate: [{ path: 'campaign',populate: { path: 'brand' } },{path:"tasks"}]
+      })
       .populate({
         path: 'hires',
         populate: { path: 'influencer' },
