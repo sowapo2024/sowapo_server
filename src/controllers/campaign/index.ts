@@ -99,7 +99,7 @@ exports.getCampaignsByBrandId = async (req, res) => {
     const campaigns = await Campaign.find({ brand: brandId })
       ?.populate('brand')
       ?.populate({path:"proposals",
-        populate: [{ path: 'campaign',populate: { path: 'brand' } },{path:"tasks"}]
+        populate: {path:"tasks"}
       })
       ?.populate({
         path: 'hires',
