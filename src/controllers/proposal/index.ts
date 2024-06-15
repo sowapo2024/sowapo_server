@@ -357,6 +357,7 @@ exports.getCampaignProposals = async (req, res) => {
   try {
     const proposals = await Proposal.find({ campaign: id })
       ?.populate('influencer')
+      ?.populate('tasks')
       ?.populate('campaign.brand');
     if (!proposals) {
       return res.status(404).json({ message: 'Proposals not found' });
