@@ -61,10 +61,14 @@ router.get('/influencer', auth, getUserChats);
 router.get('/brand', brandAuth, getUserChats);
 
 // Route for blocking a chat
-router.post('/message/block/:chatId', auth, blockChat);
+router.post('/message/influencer/block/:chatId', auth, blockChat);
+router.post('/message/brand/block/:chatId', brandAuth, blockChat);
+
 
 // Route for unblocking a chat
 router.post('/message/unblock/:chatId', auth, unBlockChat);
+router.post('/message/unblock/:chatId', brandAuth, unBlockChat);
+
 
 // Route for marking messages as seen
 router.put('/messages/seen', auth, markMessagesAsSeen);
@@ -76,7 +80,9 @@ router.delete('/messages/delete', auth, deleteMessages);
 router.delete('/delete/:id', auth, deleteChat);
 
 // Route for deleting a user's chat
-router.delete('/user/chat/delete/:id', auth, deleteUserChat);
+router.delete('/influencer/chat/delete/:id', auth, deleteUserChat);
+router.delete('/brand/chat/delete/:id', auth, deleteUserChat);
+
 
 // Route for replying to a message
 router.post('/message/reply/:id', auth, replyMessage);

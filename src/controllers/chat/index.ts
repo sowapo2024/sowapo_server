@@ -152,6 +152,7 @@ const getAllChats = async (req, res) => {
   }
 };
 
+// get chats for a user
 const getUserChats = async (req, res) => {
   const userId = req.user.id; // Assume user's ID is retrieved from the session or JWT token
 
@@ -169,14 +170,17 @@ const getUserChats = async (req, res) => {
       })
       .exec();
 
+    // Filter out blocked chats
+    const filteredChats = chats.filter(chat => !chat.blockedBy.includes(userId));
+
     // Sort chats based on the createdAt of the latest message in descending order
-    chats.sort((a, b) => {
+    filteredChats.sort((a, b) => {
       const createdAtA = a.messages[0] ? a.messages[0].createdAt : new Date(0);
       const createdAtB = b.messages[0] ? b.messages[0].createdAt : new Date(0);
       return createdAtB - createdAtA;
     });
 
-    const chatDetailsPromises = chats.map(async (chat) => {
+    const chatDetailsPromises = filteredChats.map(async (chat) => {
       let otherParticipantId, otherParticipant;
 
       // Determine the other participant
@@ -202,18 +206,19 @@ const getUserChats = async (req, res) => {
         avatar: otherParticipant?.avatar,
         lastMessage,
         chatId: chat._id,
-        createdAt:chat.createdAt
+        createdAt: chat.createdAt,
       };
     });
 
     const chatDetails = await Promise.all(chatDetailsPromises);
 
-    res.status(200).json({ data: chatDetails, message: 'chats fetched successfully' });
+    res.status(200).json({ data: chatDetails, message: 'Chats fetched successfully' });
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: 'Error retrieving user chats', error });
   }
 };
+
 
 
 const getMessages = async (req, res) => {
@@ -370,7 +375,7 @@ async function blockChat(req, res) {
       if (!chat.blockedBy.includes(userId)) {
         chat.blockedBy.push(userId);
         await chat.save();
-        return res.send({ message: 'Chat has been successfully blocked.' });
+        return res.status(200).send({ message: 'Chat has been successfully blocked.' });
       } else {
         return res
           .status(400)
@@ -387,6 +392,40 @@ async function blockChat(req, res) {
   }
 }
 
+//delete user chats
+const deleteUserChat = async (req, res) => {
+  const { chatId } = req.params;
+  const userId = req.user.id; // Assuming user ID is available from authenticated session
+
+  try {
+    const chat = await Chat.findById(chatId);
+    if (!chat) {
+      return res.status(404).send({ message: 'Chat not found' });
+    }
+
+    // Check if the requester is one of the participants
+    if (chat.participantA.equals(userId) || chat.participantB.equals(userId)) {
+      // Block the chat by adding the userId to the deletedBy array if not already deleted
+      if (!chat.deletedBy.includes(userId)) {
+        chat.deletedBy.push(userId);
+        await chat.save();
+        return res.status(200).send({ message: 'Chat has been successfully deleted.' });
+      } else {
+        return res
+          .status(400)
+          .send({ message: 'You have already deleted this chat.' });
+      }
+    } else {
+      return res
+        .status(403)
+        .send({ message: 'You do not have permission to delete this chat' });
+    }
+  } catch (err) {
+    console.error('Error deleting chat:', err);
+    return res.status(500).send({ message: 'Error deleting chat' });
+  }
+};
+
 //delete chats
 const deleteChat = async (req, res) => {
   try {
@@ -398,45 +437,36 @@ const deleteChat = async (req, res) => {
   }
 };
 
-//delete user chats
-const deleteUserChat = async (req, res) => {
-  const userId = req.user.id;
-  const { id } = req.params;
-  const chat = await Chat.findById(id);
-  const friendId = chat.members.filter((member) => {
-    return member != userId;
-  });
-  if (userId && id) {
-    try {
-      await Influencer.updateOne({ _id: userId }, { $pull: { chats: id } });
-      await Influencer.findOneAndUpdate(
-        { _id: userId },
-        { $pull: { friends: { friend: friendId } } },
-        { new: true },
-      );
-      res.status(200).json({ message: 'success: chat deleted' });
-    } catch (error) {
-      res.status(500).json({ message: 'error: something went wrong', error });
-    }
-  } else {
-    res.status(400).json({ message: 'error: invalid id' });
-  }
-};
 
-const unBlockChat = async (req, res) => {
-  const userId = req.user.id;
-  const { friendId } = req.params;
+async function unBlockChat(req, res) {
+  const { chatId } = req.params;
+  const userId = req.user.id; // Assuming user ID is available from authenticated session
+
   try {
-    await Influencer.updateOne(
-      { _id: userId },
-      { $set: { 'friends.$[elem].blocked': false } },
-      { arrayFilters: [{ 'elem.friend': friendId }] },
-    );
-    res.status(200).json({ message: 'user unblocked' });
-  } catch (error) {
-    res.status(500).json({ message: 'error: request unsucessful' });
+    const chat = await Chat.findById(chatId);
+    if (!chat) {
+      return res.status(404).send({ message: 'Chat not found' });
+    }
+
+    // Check if the requester is one of the participants
+    if (chat.participantA.equals(userId) || chat.participantB.equals(userId)) {
+      // Unblock the chat by removing the userId from the blockedBy array if it exists
+      if (chat.blockedBy.includes(userId)) {
+        chat.blockedBy = chat.blockedBy.filter(id => !id.equals(userId));
+        await chat.save();
+        return res.status(200).send({ message: 'Chat has been successfully unblocked.' });
+      } else {
+        return res.status(400).send({ message: 'You have not blocked this chat.' });
+      }
+    } else {
+      return res.status(403).send({ message: 'You do not have permission to unblock this chat' });
+    }
+  } catch (err) {
+    console.error('Error unblocking chat:', err);
+    return res.status(500).send({ message: 'Error unblocking chat' });
   }
-};
+}
+
 
 const updateMessage = async (req, res) => {
   const { id } = req.params;

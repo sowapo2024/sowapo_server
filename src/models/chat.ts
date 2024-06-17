@@ -33,8 +33,11 @@ const ChatSchema = new Schema({
   ],
   blockedBy: [{
     type: Schema.Types.ObjectId,
-    ref: 'User',
   }],
+  deletedBy: [{
+    type: Schema.Types.ObjectId,
+  }],
+
 
 },{timestamps:true});
 

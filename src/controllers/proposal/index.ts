@@ -251,7 +251,7 @@ exports.removeHire = async (req, res) => {
       (hire) => hire.influencer.toString() === influencerId.toString(),
     );
 
-    Proposal.findOneAndUpdate({influencer:influencerId},{$set:{status:"rejected"}})
+    Proposal.findOneAndUpdate({influencer:influencerId},{status:"rejected"})
 
     if (hireIndex === -1) {
       return res.status(404).json({ message: 'Hire not found in campaign' });

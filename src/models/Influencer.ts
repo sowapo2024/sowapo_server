@@ -107,6 +107,11 @@ const InfluencerSchema = new Schema(
       default:"Influencer"
     },
 
+    // last seen of this account
+    lastSeen:{
+      type:Date,
+    },
+
     // bank information for withdrawals
     bankDetails: {
       bankName: {

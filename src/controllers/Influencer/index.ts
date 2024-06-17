@@ -430,6 +430,8 @@ exports.filterInfluencers = async (req, res) => {
     }
 
     query.isSuspended = false;
+    query.profileCreated = true;
+
 
     const influencers = await Influencer.find(query).sort(sortList).exec();
 

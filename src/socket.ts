@@ -1,6 +1,10 @@
 // socket.js
 const socketIo = require('socket.io');
-const {sendPushNotification} = require("./external-apis/fcm_push_notification")
+const {
+  sendPushNotification,
+} = require('./external-apis/fcm_push_notification');
+const Influencer = require('./models/Influencer');
+const Brand = require('./models/brand');
 
 const initializeSocket = (server) => {
   const io = socketIo(server, {
@@ -12,16 +16,45 @@ const initializeSocket = (server) => {
 
   io.on('connection', (socket) => {
     console.log(`User connected: ${socket.id}`);
-
-    socket.on('join', ({ chatId, userId }) => {
+    socket.on('join', async ({ chatId, userId }) => {
       socket.join(chatId);
       console.log(`User ${userId} joined chat ${chatId}`);
+
+      try {
+        const user =
+          (await Influencer.findByIdAndUpdate(userId, {
+            lastSeen: Date.now(),
+          })) ||
+          (await Brand.findByIdAndUpdate(userId, { lastSeen: Date.now() }));
+
+        if (user) {
+          console.log(`Updated last seen for user ${userId}`);
+        }
+      } catch (error) {
+        console.log(`Error updating last seen for user ${userId}: `, error);
+      }
+
       socket.to(chatId).emit('userJoined', { userId, chatId });
     });
 
-    socket.on('leave', ({ chatId, userId }) => {
+    socket.on('leave', async ({ chatId, userId }) => {
       socket.leave(chatId);
       console.log(`User ${userId} left chat ${chatId}`);
+
+      try {
+        const user =
+          (await Influencer.findByIdAndUpdate(userId, {
+            lastSeen: Date.now(),
+          })) ||
+          (await Brand.findByIdAndUpdate(userId, { lastSeen: Date.now() }));
+
+        if (user) {
+          console.log(`Updated last seen for user ${userId}`);
+        }
+      } catch (error) {
+        console.log(`Error updating last seen for user ${userId}: `, error);
+      }
+
       socket.to(chatId).emit('userLeft', { userId, chatId });
     });
 
@@ -29,14 +62,18 @@ const initializeSocket = (server) => {
       const { chatId, pushObject } = message;
       console.log(`New message in chat ${chatId}: `, message);
       io.to(chatId).emit('message', message);
-      if (pushObject.token&&pushObject.enabled) {
-        await sendPushNotification({
-          registrationTokens: [pushObject?.token],
-          title: '💭 New Message',
-          body: message?.savedMessage?.text,
-          iconUrl: message?.savedMessage?.user.avatar,
-          imageUrl: message?.savedMessage?.image,
-        });
+      if (pushObject.token && pushObject.enabled) {
+        try {
+          await sendPushNotification({
+            registrationTokens: [pushObject?.token],
+            title: '💭 New Message',
+            body: message?.savedMessage?.text,
+            iconUrl: message?.savedMessage?.user.avatar,
+            imageUrl: message?.savedMessage?.image,
+          });
+        } catch (error) {
+          console.log('message notification error', error);
+        }
       }
     });
 
