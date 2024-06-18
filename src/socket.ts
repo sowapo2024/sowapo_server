@@ -67,9 +67,9 @@ const initializeSocket = (server) => {
           await sendPushNotification({
             registrationTokens: [pushObject?.token],
             title: '💭 New Message',
-            body: message?.savedMessage?.text,
-            iconUrl: message?.savedMessage?.user.avatar,
-            imageUrl: message?.savedMessage?.image,
+            body: message?.text,
+            iconUrl: message?.user.avatar,
+            imageUrl: message?.image,
           });
         } catch (error) {
           console.log('message notification error', error);
