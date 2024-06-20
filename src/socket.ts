@@ -70,6 +70,7 @@ const initializeSocket = (server) => {
             body: message?.text,
             iconUrl: message?.user?.avatar||`https://ui-avatars.com/api/?background=0D8ABC&color=fff&name=${message?.user?.userName}`,
             imageUrl: message?.image,
+            deepLink:"Chat"
           });
         } catch (error) {
           console.log('message notification error', error);
