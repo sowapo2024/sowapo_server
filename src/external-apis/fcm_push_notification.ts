@@ -1,7 +1,7 @@
 const admin = require('firebase-admin');
 const Influencers = require('../models/Influencer');
 const Brand = require('../models/brand');
-require("dotenv").config();
+require('dotenv').config();
 
 // Parse the JSON string from the environment variable
 const serviceAccount = JSON.parse(process.env.SERVICE_ACCOUNT);
@@ -12,7 +12,7 @@ admin.initializeApp({
 
 // A delay function for delaying retries.
 function delay(duration) {
-  return new Promise(resolve => setTimeout(resolve, duration));
+  return new Promise((resolve) => setTimeout(resolve, duration));
 }
 
 async function updatePushTokenStatus(pushToken) {
@@ -20,16 +20,19 @@ async function updatePushTokenStatus(pushToken) {
     const influencerUpdate = Influencers.findOneAndUpdate(
       { 'pushObject.token': pushToken },
       { 'pushObject.enabled': false },
-      { new: true }
+      { new: true },
     ).exec();
 
     const brandUpdate = Brand.findOneAndUpdate(
       { 'pushObject.token': pushToken },
       { 'pushObject.enabled': false },
-      { new: true }
+      { new: true },
     ).exec();
 
-    const [updatedInfluencer, updatedBrand] = await Promise.all([influencerUpdate, brandUpdate]);
+    const [updatedInfluencer, updatedBrand] = await Promise.all([
+      influencerUpdate,
+      brandUpdate,
+    ]);
 
     if (updatedInfluencer) {
       console.log(`Updated influencer: ${updatedInfluencer}`);
@@ -48,9 +51,10 @@ async function sendPushNotification({
   title,
   body,
   imageUrl,
+  deepLink,
   iconUrl,
   retryAttempt = 0,
-  maxRetries = 5 // Add a maximum retry limit
+  maxRetries = 5, // Add a maximum retry limit
 }) {
   const payload = {
     notification: {
@@ -60,15 +64,32 @@ async function sendPushNotification({
     data: {
       imageUrl: imageUrl || '',
       iconUrl: iconUrl || '',
+      deepLink: deepLink || '',
     },
-    tokens: registrationTokens
+    android: {
+      notification: {
+        imageUrl: iconUrl,
+      },
+      icon: iconUrl,
+    },
+    apns: {
+      payload: {
+        aps: {
+          'mutable-content': 1,
+        },
+      },
+      fcm_options: {
+        image: iconUrl,
+      },
+    },
+    tokens: registrationTokens,
   };
 
   let pushTokens = registrationTokens;
 
   try {
     if (pushTokens.length === 0) {
-      throw new Error("You must supply at least one push token");
+      throw new Error('You must supply at least one push token');
     }
 
     const response = await admin.messaging().sendEachForMulticast(payload);
@@ -77,10 +98,12 @@ async function sendPushNotification({
     const failedTokens = [];
     response.responses.forEach(async (result, index) => {
       if (result.error) {
-        console.log(`Error for token ${pushTokens[index]}: ${result.error.code}`);
+        console.log(
+          `Error for token ${pushTokens[index]}: ${result.error.code}`,
+        );
         switch (result.error.code) {
           case 'messaging/invalid-registration-token':
-            console.log("Push token " + pushTokens[index] + " is invalid");
+            console.log('Push token ' + pushTokens[index] + ' is invalid');
             break;
           case 'messaging/registration-token-not-registered':
             console.log('Disabling push token:', pushTokens[index]);
@@ -98,7 +121,8 @@ async function sendPushNotification({
 
     if (failedTokens.length > 0 && retryAttempt < maxRetries) {
       console.log('Failed tokens: ', failedTokens);
-      const delayTime = Math.pow(2, retryAttempt) * 1000 + Math.floor(Math.random() * 1000);
+      const delayTime =
+        Math.pow(2, retryAttempt) * 1000 + Math.floor(Math.random() * 1000);
       console.log(`Waiting ${delayTime}ms to retry...`);
       await delay(delayTime);
       console.log('Resending notification to failed devices:', failedTokens);
@@ -108,8 +132,9 @@ async function sendPushNotification({
         body,
         imageUrl,
         iconUrl,
+        deepLink,
         retryAttempt: retryAttempt + 1,
-        maxRetries
+        maxRetries,
       });
     }
 

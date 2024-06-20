@@ -165,7 +165,7 @@ const getUserChats = async (req, res) => {
     })
       .populate({
         path: 'messages',
-        options: { sort: { createdAt: -1 }, limit: 1 }, // Sorting messages to get the latest one
+        options: { sort: { createdAt: -1 } }, // Sorting messages to get the latest one
         populate: { path: 'from to', select: 'name avatar' }, // Populating 'from' and 'to' fields
       })
       .exec();
@@ -175,8 +175,8 @@ const getUserChats = async (req, res) => {
 
     // Sort chats based on the createdAt of the latest message in descending order
     filteredChats.sort((a, b) => {
-      const createdAtA = a.messages[0] ? a.messages[0].createdAt : new Date(0);
-      const createdAtB = b.messages[0] ? b.messages[0].createdAt : new Date(0);
+      const createdAtA = a.messages.length ? a.messages[0].createdAt : new Date(0);
+      const createdAtB = b.messages.length ? b.messages[0].createdAt : new Date(0);
       return createdAtB - createdAtA;
     });
 
@@ -198,7 +198,7 @@ const getUserChats = async (req, res) => {
             : await Influencer.findById(otherParticipantId).select('-password');
       }
 
-      const lastMessage = chat.messages[0]; // Get the latest message from the populated messages array
+      const lastMessage = chat.messages.length ? chat.messages[0] : null; // Get the latest message from the populated messages array
 
       return {
         otherParticipantId,
@@ -218,6 +218,7 @@ const getUserChats = async (req, res) => {
     res.status(500).json({ message: 'Error retrieving user chats', error });
   }
 };
+
 
 
 
@@ -370,7 +371,7 @@ async function blockChat(req, res) {
     }
 
     // Check if the requester is one of the participants
-    if (chat.participantA.equals(userId) || chat.participantB.equals(userId)) {
+    if (chat?.participantA?.equals(userId) || chat?.participantB?.equals(userId)) {
       // Block the chat by adding the userId to the blockedBy array if not already blocked
       if (!chat.blockedBy.includes(userId)) {
         chat.blockedBy.push(userId);

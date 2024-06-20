@@ -20,6 +20,7 @@ const {
   filterCampaigns,
   updateCampaignById,
   deleteCampaignById,
+  toggleHiringStatus,
   deleteMediaFromCampaign,
 } = require('../controllers/campaign/index');
 
@@ -64,6 +65,10 @@ router.put('/unhire/:influencerId/:campaignId', brandAuth, proposalControllers.r
 
 // Route to reactivate a campaign
 router.put('/activate/:campaignId', adminAuth, reactivateCampaign);
+
+// mark campaign as complete
+
+router.patch('/hire_status/:campaignId', brandAuth, toggleHiringStatus);
 
 // mark campaign as complete
 

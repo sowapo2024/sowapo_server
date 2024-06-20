@@ -70,7 +70,10 @@ exports.getCampaignById = async (req, res) => {
   try {
     const campaign = await Campaign.findById(campaignId)
       .populate('brand')
-      .populate('hires.inflencer');
+      ?.populate({
+        path: 'hires',
+        populate: { path: 'influencer' },
+      });
 
     if (!campaign) {
       return res.status(404).json({ error: 'Campaign not found' });
@@ -361,6 +364,28 @@ exports.markCampaignAsCompleted = async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 };
+
+exports.toggleHiringStatus = async (req, res) => {
+  try {
+    const { campaignId } = req.params;
+
+    const campaign = await Campaign.findById(campaignId);
+
+    if (!campaign) {
+      return res.status(404).json({ message: 'Campaign not found' });
+    }
+
+    campaign.hiring = !campaign.hiring;
+
+    await campaign.save();
+
+    res.status(200).json({ message: 'Campaign hiring status updated', campaign });
+  } catch (error) {
+    console.error('Error updating campaign hiring status:', error);
+    res.status(500).json({ message: 'Internal server error', error: error.message });
+  }
+};
+
 
 // delete Campaign by id
 exports.deleteCampaignById = async (req, res) => {

@@ -66,9 +66,9 @@ const initializeSocket = (server) => {
         try {
           await sendPushNotification({
             registrationTokens: [pushObject?.token],
-            title: '💭 New Message',
+            title: message?.user?.userName||"📥 Incoming message",
             body: message?.text,
-            iconUrl: message?.user.avatar,
+            iconUrl: message?.user?.avatar||`https://ui-avatars.com/api/?background=0D8ABC&color=fff&name=${message?.user?.userName}`,
             imageUrl: message?.image,
           });
         } catch (error) {
