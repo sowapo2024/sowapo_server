@@ -57,32 +57,33 @@ async function sendPushNotification({
   maxRetries = 5, // Add a maximum retry limit
 }) {
   const payload = {
+    tokens: registrationTokens,
     notification: {
       title: title || 'default title',
       body: body || 'placeholder body',
+      image: imageUrl || '', // Large image for Android and iOS
     },
     data: {
-      imageUrl: imageUrl || '',
-      iconUrl: iconUrl || '',
-      deepLink: deepLink || '',
+      deepLink: deepLink || '', // Add deep link to data
+      iconUrl: iconUrl || '', // Icon URL in data for custom handling
     },
     android: {
       notification: {
-        imageUrl: iconUrl,
+        image: imageUrl, // Large image for Android
+        icon: iconUrl, // Custom icon for Android
       },
-      icon: iconUrl,
     },
     apns: {
       payload: {
         aps: {
-          'mutable-content': 1,
+          'mutable-content': 1, // Enable mutable content for media attachment
         },
+        'media-url': imageUrl || '', // Media attachment for iOS
       },
       fcm_options: {
-        image: iconUrl,
+        image: imageUrl || '', // Image URL for iOS
       },
     },
-    tokens: registrationTokens,
   };
 
   let pushTokens = registrationTokens;
@@ -92,7 +93,7 @@ async function sendPushNotification({
       throw new Error('You must supply at least one push token');
     }
 
-    const response = await admin.messaging().sendEachForMulticast(payload);
+    const response = await admin.messaging().sendMulticast(payload);
     console.log('Successfully sent message:', response);
 
     const failedTokens = [];
