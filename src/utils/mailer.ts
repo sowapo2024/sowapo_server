@@ -1,6 +1,10 @@
 'use strict';
 const nodemailer = require('nodemailer');
 const convertHTML = require('./html_to_text_helper');
+const postmark = require('postmark');
+
+// Initialize the Postmark client with your server API token
+const client = new postmark.ServerClient(process.env.POSTMARK_SERVER_KEY);
 
 const transporter = nodemailer.createTransport({
   host: process.env.SMTP_PROVIDER,
@@ -19,28 +23,32 @@ interface MailObject {
   subject: string;
   text?: string;
   html: string;
-  attachments?: {}[];
+  attachments?: { filename: string; content: string; mimetype: string }[];
 }
 
-// async..await is not allowed in global scope, must use a wrapper
+// Function to send an email using Postmark
 async function sender(mailObject: MailObject) {
-
   try {
-    // send mail with defined transport object
-    const info = await transporter.sendMail({
-      from: mailObject.from || ' SOWAPO app <info@sowapo.com>', // sender address
-      to: mailObject.to, // list of receivers
-      subject: mailObject.subject || 'Notification', // Subject line
-      text: mailObject.text, // plain text body
-      html: mailObject.html, // html body
-      attachments: mailObject.attachments,
-    });
+    const email = {
+      From: mailObject.from || 'ayomikundev@sowapo.com',
+      To: mailObject.to,
+      Subject: mailObject.subject || 'Alert',
+      HtmlBody: mailObject.html,
+      TextBody: mailObject.text,
+      Attachments: mailObject.attachments?.map((attachment) => ({
+        Name: attachment.filename,
+        Content: attachment.content,
+        ContentType: attachment.mimetype,
+      })),
+    };
+
+    // Send the email using Postmark
+    await client.sendEmail(email);
+    // await transporter.sendMail(email)
   } catch (error) {
-    console.log('transporter error', error);
+    console.log('Postmark error', error);
     throw new Error('Something went wrong');
   }
-
-  // Message sent: <b658f8ca-6296-ccf4-8306-87d57a0b4321@example.com>
 }
 
 const sendVerification = async ({

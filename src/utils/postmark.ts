@@ -3,7 +3,7 @@ const postmark = require('postmark');
 const convertHTML = require('./html_to_text_helper');
 
 // Initialize the Postmark client with your server API token
-const client = new postmark.ServerClient(process.env.POSTMARK_API_TOKEN);
+const client = new postmark.ServerClient(process.env.POSTMARK_SERVER_KEY);
 
 interface MailObject {
   from?: string;

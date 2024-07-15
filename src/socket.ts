@@ -66,10 +66,10 @@ const initializeSocket = (server) => {
         try {
           await sendPushNotification({
             registrationTokens: [pushObject?.token],
-            title: message?.user?.userName||"📥 Incoming message",
+            title:`📩 ${ message?.user?.userName}`||"📥 Incoming message",
             body: message?.text,
             iconUrl: message?.user?.avatar||`https://ui-avatars.com/api/?background=0D8ABC&color=fff&name=${message?.user?.userName}`,
-            imageUrl: message?.image,
+            imageUrl: message?.image||message?.user?.avatar,
             deepLink:"Chat"
           });
         } catch (error) {
